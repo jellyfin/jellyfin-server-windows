@@ -150,25 +150,5 @@ namespace JellyfinTray
 			_trayIcon.Visible = false;
 			Application.Exit();
 		}
-
-		private string StartGetOutput(string filename, string arguments)
-		{
-			Process process= new Process();
-			process.StartInfo.FileName = filename;
-			process.StartInfo.Arguments = arguments;
-			process.StartInfo.UseShellExecute = false;
-			process.StartInfo.RedirectStandardOutput = true;
-			process.StartInfo.RedirectStandardError = true;
-			process.StartInfo.CreateNoWindow = false;
-			process.Start();
-
-			string output = process.StandardOutput.ReadToEnd();
-			output += Environment.NewLine + process.StandardError.ReadToEnd();
-
-			process.WaitForExit();
-
-			return output;
-		}
-
 	}
 }
