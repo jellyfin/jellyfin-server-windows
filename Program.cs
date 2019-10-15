@@ -13,6 +13,7 @@ using System.Xml.Linq;
 using System.Xml.XPath;
 using JellyfinTray.Properties;
 using Microsoft.Win32;
+using Newtonsoft.Json;
 
 namespace JellyfinTray
 {
@@ -42,12 +43,15 @@ namespace JellyfinTray
 		private string _localJellyfinUrl = "http://localhost:8096";
 		private NotifyIcon _trayIcon;
 		private ServiceController _serviceController;
+		private MenuItem _menuItemAutostart;
 		private MenuItem _menuItemStart;
 		private MenuItem _menuItemStop;
 		private MenuItem _menuItemOpen;
 		private MenuItem _menuItemExit;
 		private string _installFolder;
 		private RunType _runType;
+		private AppSettings _settings;
+		private readonly string _autostartKey = "JellyfinTray";
 
 		public TrayApplicationContext ()
 		{
@@ -91,19 +95,22 @@ namespace JellyfinTray
 			else
 				_runType = RunType.Service;
 			
+			_menuItemAutostart = new MenuItem("Autostart", AutoStartToggle);
 			_menuItemStart = new MenuItem("Start Jellyfin", Start);
 			_menuItemStop = new MenuItem("Stop Jellyfin", Stop);
 			_menuItemOpen = new MenuItem("Open Jellyfin", Open);
 			_menuItemExit = new MenuItem("Exit", Exit);
 
 			ContextMenu contextMenu = new ContextMenu(new[] {
-				                                                         _menuItemStart,
-				                                                         _menuItemStop,
-				                                                         new MenuItem("-"), 
-																		 _menuItemOpen,
-				                                                         new MenuItem("-"), 
-				                                                         _menuItemExit
-			                                                         });
+																 _menuItemAutostart,
+																 new MenuItem("-"), 
+		                                                         _menuItemStart,
+		                                                         _menuItemStop,
+		                                                         new MenuItem("-"), 
+																 _menuItemOpen,
+		                                                         new MenuItem("-"), 
+		                                                         _menuItemExit
+	                                                         });
 			contextMenu.Popup += ContextMenuOnPopup;
 			_trayIcon = new NotifyIcon()
 			           {
@@ -112,7 +119,15 @@ namespace JellyfinTray
 				           Visible = true
 			           };
 
-			CheckShowServiceNotElevatedWarning();
+			LoadSettings();
+
+			if (!_settings.FirstRunDone)
+			{
+				CheckShowServiceNotElevatedWarning();
+				AutoStart = true;
+			}
+			_settings.FirstRunDone = true;
+			SaveSettings();
 
 			if (_runType == RunType.Executable)
 			{
@@ -138,6 +153,11 @@ namespace JellyfinTray
 			return id.Owner != id.User;
 		}
 
+		private void AutoStartToggle(object sender, EventArgs e)
+		{
+			AutoStart = !AutoStart;
+		}
+
 		private void Open(object sender, EventArgs e)
 		{
 			Process.Start("explorer.exe", _localJellyfinUrl);
@@ -156,6 +176,7 @@ namespace JellyfinTray
 			_menuItemStart.Enabled = stopped;
 			_menuItemStop.Enabled = running;
 			_menuItemOpen.Enabled = running;
+			_menuItemAutostart.Checked = AutoStart;
 		}
 
 		private void Start(object sender, EventArgs e)
@@ -197,5 +218,39 @@ namespace JellyfinTray
 			Application.Exit();
 		}
 
+		private void SaveSettings()
+		{
+			File.WriteAllText(@"settings.json", JsonConvert.SerializeObject(_settings));
+		}
+
+		private void LoadSettings()
+		{
+			if (File.Exists("settings.json"))
+				_settings = JsonConvert.DeserializeObject<AppSettings>(File.ReadAllText(@"settings.json"));
+			else
+				_settings = new AppSettings();
+		}
+
+		private bool AutoStart
+		{
+			get
+			{
+				using RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+				return key.GetValue(_autostartKey) != null;
+			}
+			set
+			{
+				using RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+				if (value && key.GetValue(_autostartKey) == null)
+					key.SetValue(_autostartKey, Application.ExecutablePath);
+				else if (!value && key.GetValue(_autostartKey) != null)
+					key.DeleteValue(_autostartKey);
+			}
+		}
+	}
+
+	class AppSettings
+	{
+		public bool FirstRunDone = false;
 	}
 }
