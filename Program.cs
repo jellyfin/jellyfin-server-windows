@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Management;
+using System.Security.Principal;
 using System.ServiceProcess;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -27,6 +28,11 @@ namespace JellyfinTray
 		}
 	}
 
+	enum RunType
+	{
+		Service,
+		Executable
+	}
 
 	public class TrayApplicationContext : ApplicationContext
 	{
@@ -41,6 +47,7 @@ namespace JellyfinTray
 		private MenuItem _menuItemOpen;
 		private MenuItem _menuItemExit;
 		private string _installFolder;
+		private RunType _runType;
 
 		public TrayApplicationContext ()
 		{
@@ -71,6 +78,7 @@ namespace JellyfinTray
 					_executableFile = Path.Combine(_installFolder, "jellyfin.exe");
 					if (!File.Exists(_executableFile))
 						throw new FileNotFoundException();
+					_runType = RunType.Executable;
 				}
 				catch
 				{
@@ -80,6 +88,8 @@ namespace JellyfinTray
 					return;
 				}
 			}
+			else
+				_runType = RunType.Service;
 			
 			_menuItemStart = new MenuItem("Start Jellyfin", Start);
 			_menuItemStop = new MenuItem("Stop Jellyfin", Stop);
@@ -101,6 +111,31 @@ namespace JellyfinTray
 				           ContextMenu = contextMenu,
 				           Visible = true
 			           };
+
+			CheckShowServiceNotElevatedWarning();
+
+			if (_runType == RunType.Executable)
+			{
+				// check if Jellyfin is already runnning, is not start it
+				if (Process.GetProcessesByName("jellyfin").Length == 0)
+					Start(null, null);
+			}
+		}
+
+		private bool CheckShowServiceNotElevatedWarning()
+		{
+			if (_runType == RunType.Service && !IsElevated())
+			{
+				MessageBox.Show("When running Jellyfin as a service the tray application must be run as Administrator");
+				return true;
+			}
+			return false;
+		}
+
+		private bool IsElevated()
+		{
+			WindowsIdentity id = WindowsIdentity.GetCurrent();
+			return id.Owner != id.User;
 		}
 
 		private void Open(object sender, EventArgs e)
@@ -110,14 +145,14 @@ namespace JellyfinTray
 
 		private void ContextMenuOnPopup(object sender, EventArgs e)
 		{
-			bool serviceExists = _serviceController != null;
+			bool runningAsService = _runType == RunType.Service;
 			bool exeRunning = false;
-			if (serviceExists)
+			if (runningAsService)
 				_serviceController.Refresh();
 			else
 				exeRunning = Process.GetProcessesByName("jellyfin").Length > 0;
-			bool running = (!serviceExists && exeRunning) || (serviceExists && _serviceController.Status == ServiceControllerStatus.Running);
-			bool stopped = (!serviceExists && !exeRunning) || (serviceExists && _serviceController.Status == ServiceControllerStatus.Stopped);
+			bool running = (!runningAsService && exeRunning) || (runningAsService && _serviceController.Status == ServiceControllerStatus.Running);
+			bool stopped = (!runningAsService && !exeRunning) || (runningAsService && _serviceController.Status == ServiceControllerStatus.Stopped);
 			_menuItemStart.Enabled = stopped;
 			_menuItemStop.Enabled = running;
 			_menuItemOpen.Enabled = running;
@@ -125,30 +160,42 @@ namespace JellyfinTray
 
 		private void Start(object sender, EventArgs e)
 		{
-			if (_serviceController != null)
+			if (CheckShowServiceNotElevatedWarning())
+				return;
+			if (_runType == RunType.Service)
 				_serviceController.Start();
 			else
-				Process.Start(_executableFile);
+			{
+				Process p = new Process();
+				p.StartInfo.FileName = _executableFile;
+				p.StartInfo.CreateNoWindow = true;
+				p.Start();
+			}
 		}
 
 		private void Stop(object sender, EventArgs e)
 		{
-			if (_serviceController != null)
+			if (CheckShowServiceNotElevatedWarning())
+				return;
+			if (_runType == RunType.Service)
 				_serviceController.Stop();
 			else
 			{
 				Process process = Process.GetProcessesByName("jellyfin").FirstOrDefault();
 				if (process == null)
 					return;
-				if (process.CloseMainWindow())
+				if (!process.CloseMainWindow())
 					process.Kill();
 			}
 		}
 
 		void Exit(object sender, EventArgs e)
 		{
+			if (_runType == RunType.Executable)
+				Stop(null, null);
 			_trayIcon.Visible = false;
 			Application.Exit();
 		}
+
 	}
 }

@@ -6,8 +6,6 @@
     <UseWindowsForms>true</UseWindowsForms>
     <RuntimeIdentifiers>win-x64</RuntimeIdentifiers>
     <ApplicationIcon>JellyfinIcon.ico</ApplicationIcon>
-    <Win32Resource />
-    <ApplicationManifest>app1.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>
