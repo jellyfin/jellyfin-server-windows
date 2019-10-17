@@ -1,19 +1,17 @@
 using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Management;
 using System.Security.Principal;
 using System.ServiceProcess;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Windows.Forms;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using JellyfinTray.Properties;
 using Microsoft.Win32;
-using Newtonsoft.Json;
+
 
 namespace JellyfinTray
 {
@@ -55,26 +53,9 @@ namespace JellyfinTray
 
 		public TrayApplicationContext ()
 		{
-			_serviceController = ServiceController.GetServices().FirstOrDefault(s => s.ServiceName == _jellyfinServiceName);
-
-			try
-			{
-				RegistryKey registryKey = Registry.LocalMachine.OpenSubKey("Software\\Jellyfin\\Server");
-				// registry keys are probably written by a 32bit installer, so check the 32bit registry folder
-				if (registryKey == null)
-					registryKey = Registry.LocalMachine.OpenSubKey("Software\\WOW6432Node\\Jellyfin\\Server");
-				_installFolder = registryKey.GetValue("InstallFolder").ToString();
-				_dataFolder = registryKey.GetValue("DataFolder").ToString();
-				XDocument systemXml = XDocument.Load(Path.Combine(_dataFolder, "config\\system.xml"));
-				string port = systemXml.CreateNavigator().SelectSingleNode("/ServerConfiguration/PublicPort").Value;
-				_localJellyfinUrl = "http://localhost:" + port;
-			}
-			catch(Exception ex)
-			{
-				// We could not get the Jellyfin port from system.xml config file - just use default?
-			}
-
+			LoadPortFromJellyfinConfig();
 			
+			_serviceController = ServiceController.GetServices().FirstOrDefault(s => s.ServiceName == _jellyfinServiceName);
 			if (_serviceController == null)
 			{
 				try
@@ -95,29 +76,7 @@ namespace JellyfinTray
 			else
 				_runType = RunType.Service;
 			
-			_menuItemAutostart = new MenuItem("Autostart", AutoStartToggle);
-			_menuItemStart = new MenuItem("Start Jellyfin", Start);
-			_menuItemStop = new MenuItem("Stop Jellyfin", Stop);
-			_menuItemOpen = new MenuItem("Open Jellyfin", Open);
-			_menuItemExit = new MenuItem("Exit", Exit);
-
-			ContextMenu contextMenu = new ContextMenu(new[] {
-																 _menuItemAutostart,
-																 new MenuItem("-"), 
-		                                                         _menuItemStart,
-		                                                         _menuItemStop,
-		                                                         new MenuItem("-"), 
-																 _menuItemOpen,
-		                                                         new MenuItem("-"), 
-		                                                         _menuItemExit
-	                                                         });
-			contextMenu.Popup += ContextMenuOnPopup;
-			_trayIcon = new NotifyIcon()
-			           {
-				           Icon = Resources.JellyfinIcon,
-				           ContextMenu = contextMenu,
-				           Visible = true
-			           };
+			CreateTrayIcon();
 
 			LoadSettings();
 
@@ -134,6 +93,54 @@ namespace JellyfinTray
 				// check if Jellyfin is already runnning, is not start it
 				if (Process.GetProcessesByName("jellyfin").Length == 0)
 					Start(null, null);
+			}
+		}
+
+		private void CreateTrayIcon()
+		{
+			_menuItemAutostart = new MenuItem("Autostart", AutoStartToggle);
+			_menuItemStart = new MenuItem("Start Jellyfin", Start);
+			_menuItemStop = new MenuItem("Stop Jellyfin", Stop);
+			_menuItemOpen = new MenuItem("Open Jellyfin", Open);
+			_menuItemExit = new MenuItem("Exit", Exit);
+
+			ContextMenu contextMenu = new ContextMenu(new[]
+			                                          {
+				                                          _menuItemAutostart,
+				                                          new MenuItem("-"),
+				                                          _menuItemStart,
+				                                          _menuItemStop,
+				                                          new MenuItem("-"),
+				                                          _menuItemOpen,
+				                                          new MenuItem("-"),
+				                                          _menuItemExit
+			                                          });
+			contextMenu.Popup += ContextMenuOnPopup;
+			_trayIcon = new NotifyIcon()
+			            {
+				            Icon = Resources.JellyfinIcon,
+				            ContextMenu = contextMenu,
+				            Visible = true
+			            };
+		}
+
+		private void LoadPortFromJellyfinConfig()
+		{
+			try
+			{
+				RegistryKey registryKey = Registry.LocalMachine.OpenSubKey("Software\\Jellyfin\\Server");
+				// registry keys are probably written by a 32bit installer, so check the 32bit registry folder
+				if (registryKey == null)
+					registryKey = Registry.LocalMachine.OpenSubKey("Software\\WOW6432Node\\Jellyfin\\Server");
+				_installFolder = registryKey.GetValue("InstallFolder").ToString();
+				_dataFolder = registryKey.GetValue("DataFolder").ToString();
+				XDocument systemXml = XDocument.Load(Path.Combine(_dataFolder, "config\\system.xml"));
+				string port = systemXml.CreateNavigator().SelectSingleNode("/ServerConfiguration/PublicPort").Value;
+				_localJellyfinUrl = "http://localhost:" + port;
+			}
+			catch (Exception ex)
+			{
+				// We could not get the Jellyfin port from system.xml config file - just use default?
 			}
 		}
 
@@ -220,13 +227,13 @@ namespace JellyfinTray
 
 		private void SaveSettings()
 		{
-			File.WriteAllText(@"settings.json", JsonConvert.SerializeObject(_settings));
+			File.WriteAllText(@"settings.json", JsonSerializer.Serialize(_settings));
 		}
 
 		private void LoadSettings()
 		{
 			if (File.Exists("settings.json"))
-				_settings = JsonConvert.DeserializeObject<AppSettings>(File.ReadAllText(@"settings.json"));
+				_settings = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(@"settings.json"));
 			else
 				_settings = new AppSettings();
 		}
@@ -242,7 +249,7 @@ namespace JellyfinTray
 			{
 				using RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
 				if (value && key.GetValue(_autostartKey) == null)
-					key.SetValue(_autostartKey, Application.ExecutablePath);
+					key.SetValue(_autostartKey, Path.ChangeExtension(Application.ExecutablePath, "exe"));
 				else if (!value && key.GetValue(_autostartKey) != null)
 					key.DeleteValue(_autostartKey);
 			}
