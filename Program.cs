@@ -36,6 +36,8 @@ namespace JellyfinTray
 	public class TrayApplicationContext : ApplicationContext
 	{
 		private readonly string _jellyfinServiceName = "JellyfinServer";
+		private readonly string _autostartKey = "JellyfinTray";
+		private readonly string _settingsFile = "JFTray.json";
 		private string _executableFile;
 		private string _dataFolder = @"C:\ProgramData\Jellyfin\Server";
 		private string _localJellyfinUrl = "http://localhost:8096";
@@ -49,7 +51,6 @@ namespace JellyfinTray
 		private string _installFolder;
 		private RunType _runType;
 		private AppSettings _settings;
-		private readonly string _autostartKey = "JellyfinTray";
 
 		public TrayApplicationContext ()
 		{
@@ -227,13 +228,13 @@ namespace JellyfinTray
 
 		private void SaveSettings()
 		{
-			File.WriteAllText(@"settings.json", JsonSerializer.Serialize(_settings));
+			File.WriteAllText(_settingsFile, JsonSerializer.Serialize(_settings));
 		}
 
 		private void LoadSettings()
 		{
-			if (File.Exists("settings.json"))
-				_settings = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(@"settings.json"));
+			if (File.Exists(_settingsFile))
+				_settings = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(_settingsFile));
 			else
 				_settings = new AppSettings();
 		}
