@@ -198,7 +198,8 @@ namespace JellyfinTray
 				Process p = new Process();
 				p.StartInfo.FileName = _executableFile;
 				p.StartInfo.CreateNoWindow = true;
-				p.Start();
+                p.StartInfo.Arguments = "--noautorunwebapp";
+                p.Start();
 			}
 		}
 
