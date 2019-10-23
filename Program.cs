@@ -40,7 +40,7 @@ namespace JellyfinTray
 		private readonly string _settingsFile = "JFTray.json";
 		private string _executableFile;
 		private string _dataFolder = @"C:\ProgramData\Jellyfin\Server";
-		private string _localJellyfinUrl = "http://localhost:8096";
+		private string _localJellyfinUrl = "http://localhost:8096/web/index.html";
 		private NotifyIcon _trayIcon;
 		private ServiceController _serviceController;
 		private MenuItem _menuItemAutostart;
@@ -137,8 +137,9 @@ namespace JellyfinTray
 				_dataFolder = registryKey.GetValue("DataFolder").ToString();
 				XDocument systemXml = XDocument.Load(Path.Combine(_dataFolder, "config\\system.xml"));
 				string port = systemXml.CreateNavigator().SelectSingleNode("/ServerConfiguration/PublicPort").Value;
-				_localJellyfinUrl = "http://localhost:" + port;
-			}
+				_localJellyfinUrl = "http://localhost:" + port + "/web/index.html";
+
+            }
 			catch (Exception ex)
 			{
 				// We could not get the Jellyfin port from system.xml config file - just use default?
