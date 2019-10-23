@@ -199,7 +199,7 @@ namespace JellyfinTray
 				Process p = new Process();
 				p.StartInfo.FileName = _executableFile;
 				p.StartInfo.CreateNoWindow = true;
-                p.StartInfo.Arguments = "--noautorunwebapp";
+                p.StartInfo.Arguments = "--noautorunwebapp --datadir \"" + _dataFolder + "\"";
                 p.Start();
 			}
 		}
