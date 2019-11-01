@@ -37,7 +37,7 @@ namespace JellyfinTray
 	{
 		private readonly string _jellyfinServiceName = "JellyfinServer";
 		private readonly string _autostartKey = "JellyfinTray";
-		private readonly string _settingsFile = "JFTray.json";
+		private string _settingsFile;
 		private string _executableFile;
 		private string _dataFolder = @"C:\ProgramData\Jellyfin\Server";
 		private string _localJellyfinUrl = "http://localhost:8096/web/index.html";
@@ -138,6 +138,7 @@ namespace JellyfinTray
 				XDocument systemXml = XDocument.Load(Path.Combine(_dataFolder, "config\\system.xml"));
 				string port = systemXml.CreateNavigator().SelectSingleNode("/ServerConfiguration/PublicPort").Value;
 				_localJellyfinUrl = "http://localhost:" + port + "/web/index.html";
+                _settingsFile = _dataFolder + "\\JFTray.json";
 
             }
 			catch (Exception ex)
