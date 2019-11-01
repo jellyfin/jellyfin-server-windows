@@ -37,6 +37,7 @@ namespace JellyfinTray
 	{
 		private readonly string _jellyfinServiceName = "JellyfinServer";
 		private readonly string _autostartKey = "JellyfinTray";
+		private string _configFile;
 		private string _settingsFile;
 		private string _executableFile;
 		private string _dataFolder = @"C:\ProgramData\Jellyfin\Server";
@@ -135,10 +136,15 @@ namespace JellyfinTray
 					registryKey = Registry.LocalMachine.OpenSubKey("Software\\WOW6432Node\\Jellyfin\\Server");
 				_installFolder = registryKey.GetValue("InstallFolder").ToString();
 				_dataFolder = registryKey.GetValue("DataFolder").ToString();
-				XDocument systemXml = XDocument.Load(Path.Combine(_dataFolder, "config\\system.xml"));
-				string port = systemXml.CreateNavigator().SelectSingleNode("/ServerConfiguration/PublicPort").Value;
-				_localJellyfinUrl = "http://localhost:" + port + "/web/index.html";
-                _settingsFile = _dataFolder + "\\JFTray.json";
+				_configFile = Path.Combine(_dataFolder, "config\\system.xml").ToString();
+				
+
+				if (File.Exists(_configFile)){
+					XDocument systemXml = XDocument.Load(_configFile);
+                    string port = systemXml.CreateNavigator().SelectSingleNode("/ServerConfiguration/PublicPort").Value;
+                    _localJellyfinUrl = "http://localhost:" + port + "/web/index.html";
+				}
+                _settingsFile= Directory.CreateDirectory(_dataFolder.Replace("Server", "Tray")) + "\\JFTray.json"; ;
 
             }
 			catch (Exception ex)
