@@ -4,8 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Security.Principal;
 using System.ServiceProcess;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Windows.Forms;
 using System.Xml.Linq;
 using System.Xml.XPath;
@@ -15,7 +13,7 @@ using Microsoft.Win32;
 
 namespace JellyfinTray
 {
-	static class Program
+    static class Program
 	{
 		[STAThread]
 		static void Main()
@@ -37,7 +35,8 @@ namespace JellyfinTray
 	{
 		private readonly string _jellyfinServiceName = "JellyfinServer";
 		private readonly string _autostartKey = "JellyfinTray";
-		private string _settingsFile;
+		private string _configFile;
+		private bool FirstRunDone = false;
 		private string _executableFile;
 		private string _dataFolder = @"C:\ProgramData\Jellyfin\Server";
 		private string _localJellyfinUrl = "http://localhost:8096/web/index.html";
@@ -47,10 +46,10 @@ namespace JellyfinTray
 		private MenuItem _menuItemStart;
 		private MenuItem _menuItemStop;
 		private MenuItem _menuItemOpen;
+		private MenuItem _menuItemLogFolder;
 		private MenuItem _menuItemExit;
 		private string _installFolder;
 		private RunType _runType;
-		private AppSettings _settings;
 
 		public TrayApplicationContext ()
 		{
@@ -79,15 +78,15 @@ namespace JellyfinTray
 			
 			CreateTrayIcon();
 
-			LoadSettings();
 
-			if (!_settings.FirstRunDone)
+			if (!FirstRunDone)
 			{
 				CheckShowServiceNotElevatedWarning();
 				AutoStart = true;
 			}
-			_settings.FirstRunDone = true;
-			SaveSettings();
+			else
+                FirstRunDone = true;
+			
 
 			if (_runType == RunType.Executable)
 			{
@@ -103,6 +102,7 @@ namespace JellyfinTray
 			_menuItemStart = new MenuItem("Start Jellyfin", Start);
 			_menuItemStop = new MenuItem("Stop Jellyfin", Stop);
 			_menuItemOpen = new MenuItem("Open Jellyfin", Open);
+			_menuItemLogFolder = new MenuItem("Show Logs", ShowLogs);
 			_menuItemExit = new MenuItem("Exit", Exit);
 
 			ContextMenu contextMenu = new ContextMenu(new[]
@@ -113,6 +113,8 @@ namespace JellyfinTray
 				                                          _menuItemStop,
 				                                          new MenuItem("-"),
 				                                          _menuItemOpen,
+														  new MenuItem("-"),
+														  _menuItemLogFolder,
 				                                          new MenuItem("-"),
 				                                          _menuItemExit
 			                                          });
@@ -135,15 +137,25 @@ namespace JellyfinTray
 					registryKey = Registry.LocalMachine.OpenSubKey("Software\\WOW6432Node\\Jellyfin\\Server");
 				_installFolder = registryKey.GetValue("InstallFolder").ToString();
 				_dataFolder = registryKey.GetValue("DataFolder").ToString();
-				XDocument systemXml = XDocument.Load(Path.Combine(_dataFolder, "config\\system.xml"));
-				string port = systemXml.CreateNavigator().SelectSingleNode("/ServerConfiguration/PublicPort").Value;
-				_localJellyfinUrl = "http://localhost:" + port + "/web/index.html";
-                _settingsFile = _dataFolder + "\\JFTray.json";
+				_configFile = Path.Combine(_dataFolder, "config\\system.xml").ToString();
+				
 
+				if (File.Exists(_configFile)){
+					XDocument systemXml = XDocument.Load(_configFile);
+					XPathNavigator SettingsReader = systemXml.CreateNavigator();
+
+                    FirstRunDone = SettingsReader.SelectSingleNode("/ServerConfiguration/IsStartupWizardCompleted").ValueAsBoolean;
+                    string port = SettingsReader.SelectSingleNode("/ServerConfiguration/PublicPort").Value;
+                    
+					_localJellyfinUrl = "http://localhost:" + port + "/web/index.html";
+				}
             }
 			catch (Exception ex)
 			{
-				// We could not get the Jellyfin port from system.xml config file - just use default?
+                // We could not get the Jellyfin port from system.xml config file - just use default?
+                MessageBox.Show("Error: " + ex.Message + "\r\nCouldn't load configuration. The application will now close.");
+                Application.Exit();
+                return;
 			}
 		}
 
@@ -172,7 +184,10 @@ namespace JellyfinTray
 		{
 			Process.Start("explorer.exe", _localJellyfinUrl);
 		}
-
+		private void ShowLogs(object sender, EventArgs e)
+        {
+            Process.Start("explorer.exe", _dataFolder + "\\log");
+        }
 		private void ContextMenuOnPopup(object sender, EventArgs e)
 		{
 			bool runningAsService = _runType == RunType.Service;
@@ -229,19 +244,6 @@ namespace JellyfinTray
 			Application.Exit();
 		}
 
-		private void SaveSettings()
-		{
-			File.WriteAllText(_settingsFile, JsonSerializer.Serialize(_settings));
-		}
-
-		private void LoadSettings()
-		{
-			if (File.Exists(_settingsFile))
-				_settings = JsonSerializer.Deserialize<AppSettings>(File.ReadAllText(_settingsFile));
-			else
-				_settings = new AppSettings();
-		}
-
 		private bool AutoStart
 		{
 			get
@@ -258,10 +260,5 @@ namespace JellyfinTray
 					key.DeleteValue(_autostartKey);
 			}
 		}
-	}
-
-	class AppSettings
-	{
-		public bool FirstRunDone = false;
 	}
 }
