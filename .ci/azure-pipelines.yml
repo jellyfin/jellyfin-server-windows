@@ -54,7 +54,7 @@ jobs:
         displayName: "Build NSIS Installer"
         inputs:
           targetType: "filePath"
-          filePath: ./deployment/windows/build-jellyfin.ps1
+          filePath: build-jellyfin.ps1
           arguments: -InstallFFMPEG -InstallNSSM -MakeNSIS -InstallTrayApp -UXLocation $(Agent.TempDirectory)\jellyfin-ux -InstallLocation $(build.artifactstagingdirectory)
           errorActionPreference: "stop"
           workingDirectory: $(Build.SourcesDirectory)
@@ -62,7 +62,7 @@ jobs:
       - task: CopyFiles@2
         displayName: "Copy NSIS Installer"
         inputs:
-          sourceFolder: $(Build.SourcesDirectory)/deployment/windows/
+          sourceFolder: $(Build.SourcesDirectory)/nsis
           contents: "jellyfin*.exe"
           targetFolder: $(System.ArtifactsDirectory)/setup
           cleanTargetFolder: true

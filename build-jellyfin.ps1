@@ -116,11 +116,11 @@ function Make-NSIS {
 
     $env:InstallLocation = $ResolvedInstallLocation
     if($InstallNSIS.IsPresent -or ($InstallNSIS -eq $true)){
-        & "$tempdir/nsis/nsis-3.04/makensis.exe" /D$Architecture /DUXPATH=$ResolvedUXLocation ".\deployment\windows\jellyfin.nsi"
+        & "$tempdir/nsis/nsis-3.04/makensis.exe" /D$Architecture /DUXPATH=$ResolvedUXLocation ".\nsis\jellyfin.nsi"
     } else {
-        & "makensis" /D$Architecture /DUXPATH=$ResolvedUXLocation ".\deployment\windows\jellyfin.nsi"
+        & "makensis" /D$Architecture /DUXPATH=$ResolvedUXLocation ".\nsis\jellyfin.nsi"
     }
-    Copy-Item .\deployment\windows\jellyfin_*.exe $ResolvedInstallLocation\..\
+    Copy-Item .\nsis\jellyfin_*.exe $ResolvedInstallLocation\..\
 }
 
 
@@ -169,8 +169,6 @@ if($InstallTrayApp.IsPresent -or ($InstallTrayApp -eq $true)){
     Write-Verbose "Downloading Windows Tray App"
     Install-TrayApp $ResolvedInstallLocation $Architecture
 }
-#Copy-Item .\deployment\windows\install-jellyfin.ps1 $ResolvedInstallLocation\install-jellyfin.ps1
-#Copy-Item .\deployment\windows\install.bat $ResolvedInstallLocation\install.bat
 Copy-Item .\LICENSE $ResolvedInstallLocation\LICENSE
 if($InstallNSIS.IsPresent -or ($InstallNSIS -eq $true)){
     Write-Verbose "Installing NSIS"
