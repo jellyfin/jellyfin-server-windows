@@ -15,17 +15,18 @@ param(
     [ValidateSet('x64', 'x86', 'arm', 'arm64')][string]$Architecture = 'x64'
 )
 
-$ProgressPreference = 'SilentlyContinue' # Speedup all downloads by hiding progress bars.
+# Speed up all downloads by hiding progress bars
+$ProgressPreference = 'SilentlyContinue'
 
-#PowershellCore and *nix check to make determine which temp dir to use.
+# PowershellCore and *nix check to determine directory
 if(($PSVersionTable.PSEdition -eq 'Core') -and (-not $IsWindows)){
     $TempDir = mktemp -d
 }else{
     $TempDir = $env:Temp
 }
-
-#Create staging dir
+# Create staging directory
 New-Item -ItemType Directory -Force -Path $InstallLocation
+
 $ResolvedInstallLocation = Resolve-Path $InstallLocation
 $ResolvedUXLocation = Resolve-Path $UXLocation
 
@@ -38,7 +39,6 @@ function Build-Jellyfin {
         Write-Error "arm only supported with Windows 8 or higher"
         exit
     }
-
     Write-Verbose "windowsversion-Architecture: $windowsversion-$Architecture"
     Write-Verbose "InstallLocation: $ResolvedInstallLocation"
     Write-Verbose "DotNetVerbosity: $DotNetVerbosity"
@@ -94,7 +94,7 @@ function Install-NSSM {
     }else{
          Write-Verbose "Downloading NSSM"
          # [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-         # Temporary workaround, file is hosted in an azure blob with a custom domain in front for brevity
+         # File is hosted in an azure blob with a custom domain in front for brevity
          Invoke-WebRequest -Uri http://files.evilt.win/nssm/nssm-2.24-101-g897c7ad.zip -UseBasicParsing -OutFile "$tempdir/nssm.zip" | Write-Verbose
     }
 
