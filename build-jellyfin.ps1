@@ -23,20 +23,21 @@ if(($PSVersionTable.PSEdition -eq 'Core') -and (-not $IsWindows)){
 }else{
     $TempDir = $env:Temp
 }
+
 #Create staging dir
 New-Item -ItemType Directory -Force -Path $InstallLocation
 $ResolvedInstallLocation = Resolve-Path $InstallLocation
 $ResolvedUXLocation = Resolve-Path $UXLocation
 
-function Build-JellyFin {
+function Build-Jellyfin {
     if(($Architecture -eq 'arm64') -and ($WindowsVersion -ne 'win10')){
-            Write-Error "arm64 only supported with Windows10 Version"
-            exit
-        }
+        Write-Error "arm64 only supported with Windows10 Version"
+        exit
+    }
     if(($Architecture -eq 'arm') -and ($WindowsVersion -notin @('win10','win81','win8'))){
-            Write-Error "arm only supported with Windows 8 or higher"
-            exit
-        }
+        Write-Error "arm only supported with Windows 8 or higher"
+        exit
+    }
     Write-Verbose "windowsversion-Architecture: $windowsversion-$Architecture"
     Write-Verbose "InstallLocation: $ResolvedInstallLocation"
     Write-Verbose "DotNetVerbosity: $DotNetVerbosity"
@@ -49,6 +50,7 @@ function Install-FFMPEG {
         [string]$Architecture,
         [string]$FFMPEGVersionX86 = "ffmpeg-4.2.1-win32-shared"
     )
+
     Write-Verbose "Checking Architecture"
     if($Architecture -notin @('x86','x64')){
         Write-Warning "No builds available for your selected architecture of $Architecture"
@@ -73,6 +75,7 @@ function Install-FFMPEG {
             Copy-Item $_.FullName -Destination $installLocation | Write-Verbose
         }
     }
+
     Remove-Item "$tempdir/ffmpeg/" -Recurse -Force -ErrorAction Continue | Write-Verbose
     Remove-Item "$tempdir/ffmpeg.zip" -Force -ErrorAction Continue | Write-Verbose
 }
@@ -82,6 +85,7 @@ function Install-NSSM {
         [string]$ResolvedInstallLocation,
         [string]$Architecture
     )
+
     Write-Verbose "Checking Architecture"
     if($Architecture -notin @('x86','x64')){
         Write-Warning "No builds available for your selected architecture of $Architecture"
@@ -105,6 +109,7 @@ function Install-NSSM {
             Copy-Item $_.FullName -Destination $installLocation | Write-Verbose
         }
     }
+
     Remove-Item "$tempdir/nssm/" -Recurse -Force -ErrorAction Continue | Write-Verbose
     Remove-Item "$tempdir/nssm.zip" -Force -ErrorAction Continue | Write-Verbose
 }
@@ -120,6 +125,7 @@ function Make-NSIS {
     } else {
         & "makensis" /D$Architecture /DUXPATH=$ResolvedUXLocation ".\nsis\jellyfin.nsi"
     }
+
     Copy-Item .\nsis\jellyfin_*.exe $ResolvedInstallLocation\..\
 }
 
@@ -132,7 +138,7 @@ function Install-NSIS {
     Expand-Archive "$tempdir/nsis.zip" -DestinationPath "$tempdir/nsis/" -Force | Write-Verbose
 }
 
-function Cleanup-NSIS {
+function Clean-NSIS {
     Remove-Item "$tempdir/nsis/" -Recurse -Force -ErrorAction Continue | Write-Verbose
     Remove-Item "$tempdir/nsis.zip" -Force -ErrorAction Continue | Write-Verbose
 }
@@ -142,6 +148,7 @@ function Install-TrayApp {
         [string]$ResolvedInstallLocation,
         [string]$Architecture
     )
+
     Write-Verbose "Checking Architecture"
     if($Architecture -ne 'x64'){
         Write-Warning "No builds available for your selected architecture of $Architecture"
@@ -155,7 +162,7 @@ function Install-TrayApp {
 
 if(-not $SkipJellyfinBuild.IsPresent -and -not ($InstallNSIS -eq $true)){
     Write-Verbose "Starting Build Process: Selected Environment is $WindowsVersion-$Architecture"
-    Build-JellyFin
+    Build-Jellyfin
 }
 if($InstallFFMPEG.IsPresent -or ($InstallFFMPEG -eq $true)){
     Write-Verbose "Starting FFMPEG Install"
@@ -175,12 +182,12 @@ if($InstallNSIS.IsPresent -or ($InstallNSIS -eq $true)){
     Install-NSIS
 }
 if($MakeNSIS.IsPresent -or ($MakeNSIS -eq $true)){
-    Write-Verbose "Starting NSIS Package creation"
+    Write-Verbose "Starting NSIS Package Creation"
     Make-NSIS $ResolvedInstallLocation
 }
 if($InstallNSIS.IsPresent -or ($InstallNSIS -eq $true)){
-    Write-Verbose "Cleanup NSIS"
-    Cleanup-NSIS
+    Write-Verbose "Clean NSIS"
+    Clean-NSIS
 }
 if($GenerateZip.IsPresent -or ($GenerateZip -eq $true)){
     Compress-Archive -Path $ResolvedInstallLocation -DestinationPath "$ResolvedInstallLocation/jellyfin.zip" -Force
