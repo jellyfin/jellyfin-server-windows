@@ -9,10 +9,10 @@ param(
     [string]$InstallLocation = "./dist/jellyfin-win-nsis",
     [string]$UXLocation = "../jellyfin-ux",
     [switch]$InstallTrayApp,
-    [ValidateSet('Debug','Release')][string]$BuildType = 'Release',
-    [ValidateSet('Quiet','Minimal', 'Normal')][string]$DotNetVerbosity = 'Minimal',
-    [ValidateSet('win','win7', 'win8','win81','win10')][string]$WindowsVersion = 'win',
-    [ValidateSet('x64','x86', 'arm', 'arm64')][string]$Architecture = 'x64'
+    [ValidateSet('Debug', 'Release')][string]$BuildType = 'Release',
+    [ValidateSet('Quiet', 'Minimal', 'Normal')][string]$DotNetVerbosity = 'Minimal',
+    [ValidateSet('win', 'win7', 'win8', 'win81', 'win10')][string]$WindowsVersion = 'win',
+    [ValidateSet('x64', 'x86', 'arm', 'arm64')][string]$Architecture = 'x64'
 )
 
 $ProgressPreference = 'SilentlyContinue' # Speedup all downloads by hiding progress bars.
@@ -38,6 +38,7 @@ function Build-Jellyfin {
         Write-Error "arm only supported with Windows 8 or higher"
         exit
     }
+
     Write-Verbose "windowsversion-Architecture: $windowsversion-$Architecture"
     Write-Verbose "InstallLocation: $ResolvedInstallLocation"
     Write-Verbose "DotNetVerbosity: $DotNetVerbosity"
@@ -121,9 +122,9 @@ function Make-NSIS {
 
     $env:InstallLocation = $ResolvedInstallLocation
     if($InstallNSIS.IsPresent -or ($InstallNSIS -eq $true)){
-        & "$tempdir/nsis/nsis-3.04/makensis.exe" /D$Architecture /DUXPATH=$ResolvedUXLocation ".\nsis\jellyfin.nsi"
+        & "$tempdir/nsis/nsis-3.04/makensis.exe" /D$Architecture /DUXPATH=$ResolvedUXLocation "..\nsis\jellyfin.nsi"
     } else {
-        & "makensis" /D$Architecture /DUXPATH=$ResolvedUXLocation ".\nsis\jellyfin.nsi"
+        & "makensis" /D$Architecture /DUXPATH=$ResolvedUXLocation "..\nsis\jellyfin.nsi"
     }
 
     Copy-Item .\nsis\jellyfin_*.exe $ResolvedInstallLocation\..\

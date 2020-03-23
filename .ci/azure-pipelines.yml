@@ -10,6 +10,11 @@ jobs:
         persistCredentials: true
 
       - task: CmdLine@2
+        displayName: "Clone Server"
+        inputs:
+          script: "git clone --single-branch --branch master --depth=1 https://github.com/jellyfin/jellyfin.git $(Build.SourcesDirectory)/jellyfin"
+
+      - task: CmdLine@2
         displayName: "Clone Web Client (Master, Release, or Tag)"
         condition: and(succeeded(), or(contains(variables['Build.SourceBranch'], 'release'), contains(variables['Build.SourceBranch'], 'master'), contains(variables['Build.SourceBranch'], 'tag')), in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'BuildCompletion'))
         inputs:
@@ -40,7 +45,7 @@ jobs:
         inputs:
           sourceFolder: $(Agent.TempDirectory)/jellyfin-web/dist
           contents: "**"
-          targetFolder: $(Build.SourcesDirectory)/MediaBrowser.WebDashboard/jellyfin-web
+          targetFolder: $(Build.SourcesDirectory)/jellyfin/jellyfin-web
           cleanTargetFolder: true
           overWrite: true
           flattenFolders: false
@@ -57,7 +62,7 @@ jobs:
           filePath: build-jellyfin.ps1
           arguments: -InstallFFMPEG -InstallNSSM -MakeNSIS -InstallTrayApp -UXLocation $(Agent.TempDirectory)\jellyfin-ux -InstallLocation $(build.artifactstagingdirectory)
           errorActionPreference: "stop"
-          workingDirectory: $(Build.SourcesDirectory)
+          workingDirectory: $(Build.SourcesDirectory)/jellyfin
 
       - task: CopyFiles@2
         displayName: "Copy NSIS Installer"
