@@ -127,7 +127,7 @@ function Make-NSIS {
         & "makensis" /D$Architecture /DUXPATH=$ResolvedUXLocation "..\nsis\jellyfin.nsi"
     }
 
-    Copy-Item .\nsis\jellyfin_*.exe $ResolvedInstallLocation\..\
+    Copy-Item ..\nsis\jellyfin* $ResolvedInstallLocation\..
 }
 
 
