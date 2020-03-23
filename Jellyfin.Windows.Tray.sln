@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{DD25D207-9995-43FF-9FAB-8AA9F4E7ABB3}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jellyfin.Windows.Tray", "src\Jellyfin.Windows.Tray\Jellyfin.Windows.Tray.csproj", "{84B8A4C7-8BB5-48A4-8D59-BAEEF637F914}"
 EndProject
 Global
@@ -32,8 +30,5 @@ Global
 		{84B8A4C7-8BB5-48A4-8D59-BAEEF637F914}.Release|x64.Build.0 = Release|Any CPU
 		{84B8A4C7-8BB5-48A4-8D59-BAEEF637F914}.Release|x86.ActiveCfg = Release|Any CPU
 		{84B8A4C7-8BB5-48A4-8D59-BAEEF637F914}.Release|x86.Build.0 = Release|Any CPU
-	EndGlobalSection
-	GlobalSection(NestedProjects) = preSolution
-		{84B8A4C7-8BB5-48A4-8D59-BAEEF637F914} = {DD25D207-9995-43FF-9FAB-8AA9F4E7ABB3}
 	EndGlobalSection
 EndGlobal
