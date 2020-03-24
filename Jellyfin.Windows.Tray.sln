@@ -1,9 +1,9 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jellyfin.Windows.Tray", "src\Jellyfin.Windows.Tray\Jellyfin.Windows.Tray.csproj", "{84B8A4C7-8BB5-48A4-8D59-BAEEF637F914}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Jellyfin.Windows.Tray", "Jellyfin.Windows.Tray\Jellyfin.Windows.Tray.csproj", "{84B8A4C7-8BB5-48A4-8D59-BAEEF637F914}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

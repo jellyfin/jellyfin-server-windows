@@ -4,14 +4,13 @@ ShowInstDetails show
 ShowUninstDetails show
 Unicode True
 
-;--------------------------------
 !define SF_USELECTED  0 ; used to check selected options status, rest are inherited from Sections.nsh
 
-    !include "MUI2.nsh"
-    !include "Sections.nsh"
-    !include "LogicLib.nsh"
+!include "MUI2.nsh"
+!include "Sections.nsh"
+!include "LogicLib.nsh"
 
-    !include "helpers\ShowError.nsh"
+!include "helpers\ShowError.nsh"
 
 ; Global variables that we'll use
     Var _JELLYFINVERSION_
@@ -25,6 +24,7 @@ Unicode True
     Var _MAKESHORTCUTS_
     Var _FOLDEREXISTS_
 ;
+
 !ifdef x64
     !define ARCH "x64"
     !define NAMESUFFIX "(64 bit)"
@@ -43,34 +43,33 @@ Unicode True
 
 ;--------------------------------
 
-    !define REG_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\JellyfinServer" ;Registry to show up in Add/Remove Programs
-    !define REG_CONFIG_KEY "Software\Jellyfin\Server" ;Registry to store all configuration
+!define REG_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\JellyfinServer" ;Registry to show up in Add/Remove Programs
+!define REG_CONFIG_KEY "Software\Jellyfin\Server" ;Registry to store all configuration
 
-    !getdllversion "$%InstallLocation%\jellyfin.dll" ver_ ;Align installer version with jellyfin.dll version
+!getdllversion "$%InstallLocation%\jellyfin.dll" ver_ ;Align installer version with jellyfin.dll version
 
-    Name "Jellyfin Server ${ver_1}.${ver_2}.${ver_3} ${NAMESUFFIX}" ; This is referred in various header text labels
-    OutFile "jellyfin_${ver_1}.${ver_2}.${ver_3}_windows-${ARCH}.exe" ; Naming convention jellyfin_{version}_windows-{arch].exe
-    BrandingText "Jellyfin Server ${ver_1}.${ver_2}.${ver_3} Installer" ; This shows in just over the buttons
+Name "Jellyfin Server ${ver_1}.${ver_2}.${ver_3} ${NAMESUFFIX}" ; This is referred in various header text labels
+OutFile "jellyfin_${ver_1}.${ver_2}.${ver_3}_windows-${ARCH}.exe" ; Naming convention jellyfin_{version}_windows-{arch].exe
+BrandingText "Jellyfin Server ${ver_1}.${ver_2}.${ver_3} Installer" ; This shows in just over the buttons
 
 ; installer attributes, these show up in details tab on installer properties
-    VIProductVersion "${ver_1}.${ver_2}.${ver_3}.0" ; VIProductVersion format, should be X.X.X.X
-    VIFileVersion "${ver_1}.${ver_2}.${ver_3}.0" ; VIFileVersion format, should be X.X.X.X
-    VIAddVersionKey "ProductName" "Jellyfin Server"
-    VIAddVersionKey "FileVersion" "${ver_1}.${ver_2}.${ver_3}.0"
-    VIAddVersionKey "LegalCopyright" "(c) 2019 Jellyfin Contributors. Code released under the GNU General Public License"
-    VIAddVersionKey "FileDescription" "Jellyfin Server: The Free Software Media System"
+VIProductVersion "${ver_1}.${ver_2}.${ver_3}.0" ; VIProductVersion format, should be X.X.X.X
+VIFileVersion "${ver_1}.${ver_2}.${ver_3}.0" ; VIFileVersion format, should be X.X.X.X
+VIAddVersionKey "ProductName" "Jellyfin Server"
+VIAddVersionKey "FileVersion" "${ver_1}.${ver_2}.${ver_3}.0"
+VIAddVersionKey "LegalCopyright" "(c) 2019 Jellyfin Contributors. Code released under the GNU General Public License"
+VIAddVersionKey "FileDescription" "Jellyfin Server: The Free Software Media System"
 
 ;TODO, check defaults
-    InstallDir ${INSTALL_DIRECTORY} ;Default installation folder
-    InstallDirRegKey HKLM "${REG_CONFIG_KEY}" "InstallFolder" ;Read the registry for install folder,
+InstallDir ${INSTALL_DIRECTORY} ;Default installation folder
+InstallDirRegKey HKLM "${REG_CONFIG_KEY}" "InstallFolder" ;Read the registry for install folder,
 
-    RequestExecutionLevel admin ; ask it upfront for service control, and installing in priv folders
+RequestExecutionLevel admin ; ask it upfront for service control, and installing in priv folders
 
-    CRCCheck on ; make sure the installer wasn't corrupted while downloading
+CRCCheck on ; make sure the installer wasn't corrupted while downloading
 
-    !define MUI_ABORTWARNING ;Prompts user in case of aborting install
+!define MUI_ABORTWARNING ;Prompts user in case of aborting install
 
-; TODO: Replace with nice Jellyfin Icons
 !ifdef UXPATH
     !define MUI_ICON "${UXPATH}\branding\NSIS\modern-install.ico" ; Installer Icon
     !define MUI_UNICON "${UXPATH}\branding\NSIS\modern-install.ico" ; Uninstaller Icon
@@ -87,12 +86,13 @@ Unicode True
 ; Welcome Page
     !define MUI_WELCOMEPAGE_TEXT "The installer will ask for details to install Jellyfin Server."
     !insertmacro MUI_PAGE_WELCOME
+
 ; License Page
     !insertmacro MUI_PAGE_LICENSE "$%InstallLocation%\LICENSE" ; picking up generic GPL
 
 ; Setup Type Page
     Page custom ShowSetupTypePage SetupTypePage_Config
-    
+
 ; Components Page
     !define MUI_PAGE_CUSTOMFUNCTION_PRE HideComponentsPage
     !insertmacro MUI_PAGE_COMPONENTS
@@ -133,10 +133,12 @@ Unicode True
 
 ;--------------------------------
 ;Languages; Add more languages later here if needed
+
     !insertmacro MUI_LANGUAGE "English"
 
 ;--------------------------------
 ;Installer Sections
+
 Section "!Jellyfin Server (required)" InstallJellyfinServer
     SectionIn RO ; Mandatory section, isn't this the whole purpose to run the installer.
 
@@ -166,9 +168,8 @@ Section "!Jellyfin Server (required)" InstallJellyfinServer
 
     File "/oname=icon.ico" "${UXPATH}\branding\NSIS\modern-install.ico"
     File /r $%InstallLocation%\*
-    
 
-; Write the InstallFolder, DataFolder, Network Service info into the registry for later use
+    ; Write the InstallFolder, DataFolder, Network Service info into the registry for later use
     WriteRegExpandStr HKLM "${REG_CONFIG_KEY}" "InstallFolder" "$INSTDIR"
     WriteRegExpandStr HKLM "${REG_CONFIG_KEY}" "DataFolder" "$_JELLYFINDATADIR_"
     WriteRegStr HKLM "${REG_CONFIG_KEY}" "ServiceAccountType" "$_SERVICEACCOUNTTYPE_"
@@ -176,7 +177,7 @@ Section "!Jellyfin Server (required)" InstallJellyfinServer
     !getdllversion "$%InstallLocation%\jellyfin.dll" ver_
     StrCpy $_JELLYFINVERSION_ "${ver_1}.${ver_2}.${ver_3}" ;
 
-; Write the uninstall keys for Windows
+    ; Write the uninstall keys for Windows
     WriteRegStr HKLM "${REG_UNINST_KEY}" "DisplayName" "Jellyfin Server $_JELLYFINVERSION_ ${NAMESUFFIX}"
     WriteRegExpandStr HKLM "${REG_UNINST_KEY}" "UninstallString" '"$INSTDIR\Uninstall.exe"'
     WriteRegStr HKLM "${REG_UNINST_KEY}" "DisplayIcon" '"$INSTDIR\Uninstall.exe",0'
@@ -186,7 +187,7 @@ Section "!Jellyfin Server (required)" InstallJellyfinServer
     WriteRegDWORD HKLM "${REG_UNINST_KEY}" "NoModify" 1
     WriteRegDWORD HKLM "${REG_UNINST_KEY}" "NoRepair" 1
 
-;Create uninstaller
+    ; Create uninstaller
     WriteUninstaller "$INSTDIR\Uninstall.exe"
 SectionEnd
 
@@ -260,7 +261,6 @@ ${If} $_INSTALLSERVICE_ == "Yes" ; Only run this if we're going to install the s
         ${EndIf}
         DetailPrint "Jellyfin Server service exit action set, $0"
 ${EndIf}
-
 SectionEnd
 
 Section "-start service" StartService
@@ -302,7 +302,6 @@ SectionEnd
 ;Uninstaller Section
 
 Section "Uninstall"
-
     ReadRegStr $INSTDIR HKLM "${REG_CONFIG_KEY}" "InstallFolder"  ; read the installation folder
     ReadRegStr $_JELLYFINDATADIR_ HKLM "${REG_CONFIG_KEY}" "DataFolder"  ; read the data folder
     ReadRegStr $_SERVICEACCOUNTTYPE_ HKLM "${REG_CONFIG_KEY}" "ServiceAccountType"  ; read the account name
@@ -349,10 +348,9 @@ Section "Uninstall"
     RMDir /r /REBOOTOK "$INSTDIR\jellyfin-web"
     Delete "$INSTDIR\Uninstall.exe"
     RMDir /r /REBOOTOK "$INSTDIR"
-    
+
     DeleteRegKey HKLM "Software\Jellyfin"
     DeleteRegKey HKLM "${REG_UNINST_KEY}"
-
 SectionEnd
 
 Function .onInit
@@ -390,7 +388,7 @@ Function .onInit
     StrCpy $_EXISTINGINSTALLATION_ "Yes" ; Set our flag to be used later
     SectionSetText ${InstallJellyfinServer} "Upgrade Jellyfin Server (required)" ; Change install text to "Upgrade"
 
-  ; check if service was run using Network Service account
+    ; check if service was run using Network Service account
     ClearErrors
     ReadRegStr $_SERVICEACCOUNTTYPE_ HKLM "${REG_CONFIG_KEY}" "ServiceAccountType" ; in case of error _SERVICEACCOUNTTYPE_ will be NetworkService as default
 
@@ -400,8 +398,8 @@ Function .onInit
     ; Hide sections which will not be needed in case of previous install
     ; SectionSetText ${InstallService} ""
 
-; check if there is a service called Jellyfin, there should be
-; hack : nssm statuscode Jellyfin will return non zero return code in case it exists
+    ; check if there is a service called Jellyfin, there should be
+    ; hack : nssm statuscode Jellyfin will return non zero return code in case it exists
     ExecWait '"$INSTDIR\nssm.exe" statuscode JellyfinServer' $0
     DetailPrint "Jellyfin Server service statuscode, $0"
     IntCmp $0 0 NoService ; service doesn't exist, may be run from desktop shortcut
@@ -413,7 +411,6 @@ Function .onInit
     StrCpy $_MAKESHORTCUTS_ "No"
     SectionSetText ${CreateWinShortcuts} ""
 
-  
     NoService: ; existing install was present but no service was detected
         ${If} $_SERVICEACCOUNTTYPE_ == "None"
             StrCpy $_SETUPTYPE_ "Basic"
@@ -422,7 +419,7 @@ Function .onInit
             StrCpy $_MAKESHORTCUTS_ "Yes"
         ${EndIf}
 
-; Let the user know that we'll upgrade and provide an option to quit.
+    ; Let the user know that we'll upgrade and provide an option to quit
     MessageBox MB_OKCANCEL|MB_ICONINFORMATION "Existing installation of Jellyfin Server was detected, it'll be upgraded, settings will be retained. \
     $\r$\nClick OK to proceed, Cancel to exit installer." /SD IDOK IDOK ProceedWithUpgrade
     Quit ; Quit if the user is not sure about upgrade
@@ -430,7 +427,6 @@ Function .onInit
     ProceedWithUpgrade:
 
     NoExisitingInstall: ; by this time, the variables have been correctly set to reflect previous install details
-
 FunctionEnd
 
 Function HideInstallDirectoryPage
@@ -533,7 +529,6 @@ ${Else}
             StrCpy $_JELLYFINDATADIR_ "$%ProgramData%\Jellyfin\Server"
             SectionSetText ${CreateWinShortcuts} ""
 ${EndIf}
-    
 FunctionEnd
 
 Function ServiceConfigPage_Config
