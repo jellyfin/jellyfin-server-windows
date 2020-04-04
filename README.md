@@ -1,1 +1,1 @@
-# jellyfin-windows-tray
+# jellyfin-windows-server

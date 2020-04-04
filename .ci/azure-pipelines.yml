@@ -1,3 +1,17 @@
+trigger:
+  batch: true
+  branches:
+    include:
+    - '*'
+  tags:
+    include:
+    - '*'
+
+pr:
+  branches:
+    include:
+    - '*'
+
 jobs:
   - job: build
     displayName: 'Build'
@@ -10,38 +24,42 @@ jobs:
         persistCredentials: true
 
       - task: CmdLine@2
-        displayName: "Clone Server"
+        displayName: "Clone Server Branch"
+        condition: contains(variables['Build.SourceBranch'], 'refs')
         inputs:
-          script: "git clone --single-branch --branch master --depth=1 https://github.com/jellyfin/jellyfin.git $(Build.SourcesDirectory)/jellyfin"
+          script: "git clone --single-branch --branch $(Build.SourceBranchName) --depth=1 https://github.com/jellyfin/jellyfin.git $(Build.SourcesDirectory)/jellyfin"
 
       - task: CmdLine@2
-        displayName: "Clone Web Client (Master, Release, or Tag)"
-        condition: and(succeeded(), or(contains(variables['Build.SourceBranch'], 'release'), contains(variables['Build.SourceBranch'], 'master'), contains(variables['Build.SourceBranch'], 'tag')), in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'BuildCompletion'))
+        displayName: "Clone Server Target"
+        condition: in(variables['Build.Reason'], 'PullRequest')
+        inputs:
+          script: "git clone --single-branch --branch $(System.PullRequest.TargetBranch) --depth=1 https://github.com/jellyfin/jellyfin.git $(Build.SourcesDirectory)/jellyfin"
+
+      - task: CmdLine@2
+        displayName: "Clone Web Branch"
+        condition: contains(variables['Build.SourceBranch'], 'refs')
         inputs:
           script: "git clone --single-branch --branch $(Build.SourceBranchName) --depth=1 https://github.com/jellyfin/jellyfin-web.git $(Agent.TempDirectory)/jellyfin-web"
 
       - task: CmdLine@2
-        displayName: "Clone Web Client (PR)"
-        condition: and(succeeded(), or(contains(variables['System.PullRequest.TargetBranch'], 'release'), contains(variables['System.PullRequest.TargetBranch'], 'master')), in(variables['Build.Reason'], 'PullRequest'))
+        displayName: "Clone Web Target"
+        condition: in(variables['Build.Reason'], 'PullRequest')
         inputs:
           script: "git clone --single-branch --branch $(System.PullRequest.TargetBranch) --depth 1 https://github.com/jellyfin/jellyfin-web.git $(Agent.TempDirectory)/jellyfin-web"
 
       - task: NodeTool@0
         displayName: "Install Node"
-        condition: and(succeeded(), or(contains(variables['System.PullRequest.TargetBranch'], 'release'), contains(variables['System.PullRequest.TargetBranch'], 'master'), contains(variables['Build.SourceBranch'], 'release'), contains(variables['Build.SourceBranch'], 'master')), in(variables['Build.Reason'], 'PullRequest', 'IndividualCI', 'BatchedCI', 'BuildCompletion'))
         inputs:
-          versionSpec: "10.x"
+          versionSpec: "12.x"
 
       - task: CmdLine@2
         displayName: "Build Web Client"
-        condition: and(succeeded(), or(contains(variables['System.PullRequest.TargetBranch'], 'release'), contains(variables['System.PullRequest.TargetBranch'], 'master'), contains(variables['Build.SourceBranch'], 'release'), contains(variables['Build.SourceBranch'], 'master')), in(variables['Build.Reason'], 'PullRequest', 'IndividualCI', 'BatchedCI', 'BuildCompletion'))
         inputs:
           script: yarn install
           workingDirectory: $(Agent.TempDirectory)/jellyfin-web
 
       - task: CopyFiles@2
         displayName: "Copy Web Client"
-        condition: and(succeeded(), or(contains(variables['System.PullRequest.TargetBranch'], 'release'), contains(variables['System.PullRequest.TargetBranch'], 'master'), contains(variables['Build.SourceBranch'], 'release'), contains(variables['Build.SourceBranch'], 'master')), in(variables['Build.Reason'], 'PullRequest', 'IndividualCI', 'BatchedCI', 'BuildCompletion'))
         inputs:
           sourceFolder: $(Agent.TempDirectory)/jellyfin-web/dist
           contents: "**"
@@ -53,14 +71,14 @@ jobs:
       - task: CmdLine@2
         displayName: "Clone UX Repository"
         inputs:
-          script: git clone --depth=1 https://github.com/jellyfin/jellyfin-ux $(Agent.TempDirectory)\jellyfin-ux
+          script: 'git clone --depth=1 https://github.com/jellyfin/jellyfin-ux $(Agent.TempDirectory)/jellyfin-ux'
 
       - task: PowerShell@2
         displayName: "Build NSIS Installer"
         inputs:
           targetType: "filePath"
           filePath: build-jellyfin.ps1
-          arguments: -InstallFFMPEG -InstallNSSM -MakeNSIS -InstallTrayApp -UXLocation $(Agent.TempDirectory)\jellyfin-ux -InstallLocation $(build.artifactstagingdirectory)
+          arguments: -InstallFFMPEG -InstallNSSM -MakeNSIS -InstallTrayApp -UXLocation $(Agent.TempDirectory)\jellyfin-ux -InstallLocation $(Build.ArtifactStagingDirectory)
           errorActionPreference: "stop"
           workingDirectory: $(Build.SourcesDirectory)/jellyfin
 
@@ -75,8 +93,7 @@ jobs:
           flattenFolders: true
 
       - task: PublishPipelineArtifact@0
-        displayName: "Publish Artifact Setup"
-        condition: succeeded()
+        displayName: "Publish Artifact"
         inputs:
-          targetPath: "$(build.artifactstagingdirectory)/setup"
-          artifactName: "Jellyfin Server Setup"
+          targetPath: "$(Build.ArtifactStagingDirectory)/setup"
+          artifactName: "jellyfin-server-windows"
