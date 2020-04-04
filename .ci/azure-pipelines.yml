@@ -25,7 +25,7 @@ jobs:
 
       - task: CmdLine@2
         displayName: "Clone Server Branch"
-        condition: contains(variables['Build.SourceBranch'], 'refs')
+        condition: in(variables['Build.Reason'], 'IndividualCI')
         inputs:
           script: "git clone --single-branch --branch $(Build.SourceBranchName) --depth=1 https://github.com/jellyfin/jellyfin.git $(Build.SourcesDirectory)/jellyfin"
 
@@ -37,7 +37,7 @@ jobs:
 
       - task: CmdLine@2
         displayName: "Clone Web Branch"
-        condition: contains(variables['Build.SourceBranch'], 'refs')
+        condition: in(variables['Build.Reason'], 'IndividualCI')
         inputs:
           script: "git clone --single-branch --branch $(Build.SourceBranchName) --depth=1 https://github.com/jellyfin/jellyfin-web.git $(Agent.TempDirectory)/jellyfin-web"
 
