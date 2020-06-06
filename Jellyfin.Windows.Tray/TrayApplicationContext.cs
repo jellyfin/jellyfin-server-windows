@@ -1,4 +1,5 @@
 using System;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -23,12 +24,12 @@ namespace Jellyfin.Windows.Tray
         private string _localJellyfinUrl = "http://localhost:8096/web/index.html";
         private NotifyIcon _trayIcon;
         private ServiceController _serviceController;
-        private MenuItem _menuItemAutostart;
-        private MenuItem _menuItemStart;
-        private MenuItem _menuItemStop;
-        private MenuItem _menuItemOpen;
-        private MenuItem _menuItemLogFolder;
-        private MenuItem _menuItemExit;
+        private ToolStripMenuItem _menuItemAutostart;
+        private ToolStripMenuItem _menuItemStart;
+        private ToolStripMenuItem _menuItemStop;
+        private ToolStripMenuItem _menuItemOpen;
+        private ToolStripMenuItem _menuItemLogFolder;
+        private ToolStripMenuItem _menuItemExit;
         private string _installFolder;
         private RunType _runType;
 
@@ -77,31 +78,34 @@ namespace Jellyfin.Windows.Tray
 
         private void CreateTrayIcon()
         {
-            _menuItemAutostart = new MenuItem("Autostart", AutoStartToggle);
-            _menuItemStart = new MenuItem("Start Jellyfin", Start);
-            _menuItemStop = new MenuItem("Stop Jellyfin", Stop);
-            _menuItemOpen = new MenuItem("Open Jellyfin", Open);
-            _menuItemLogFolder = new MenuItem("Show Logs", ShowLogs);
-            _menuItemExit = new MenuItem("Exit", Exit);
+            _menuItemAutostart = new ToolStripMenuItem("Autostart",null, AutoStartToggle);
+            _menuItemStart = new ToolStripMenuItem("Start Jellyfin",null, Start);
+            _menuItemStop = new ToolStripMenuItem("Stop Jellyfin",null, Stop);
+            _menuItemOpen = new ToolStripMenuItem("Open Jellyfin", null, Open);
+            _menuItemLogFolder = new ToolStripMenuItem("Show Logs", null, ShowLogs);
+            _menuItemExit = new ToolStripMenuItem("Exit",null, Exit);
 
-            ContextMenu contextMenu = new ContextMenu(new[]
-                                                      {
-                                                          _menuItemAutostart,
-                                                          new MenuItem("-"),
-                                                          _menuItemStart,
-                                                          _menuItemStop,
-                                                          new MenuItem("-"),
-                                                          _menuItemOpen,
-                                                          new MenuItem("-"),
-                                                          _menuItemLogFolder,
-                                                          new MenuItem("-"),
-                                                          _menuItemExit
-                                                      });
-            contextMenu.Popup += ContextMenuOnPopup;
+            
+
+            
+
+            ContextMenuStrip contextMenu = new ContextMenuStrip(); 
+            contextMenu.Items.Add(_menuItemAutostart);
+            contextMenu.Items.Add(new ToolStripSeparator());
+            contextMenu.Items.Add(_menuItemStart);
+            contextMenu.Items.Add(_menuItemStop);
+            contextMenu.Items.Add(new ToolStripSeparator());
+            contextMenu.Items.Add(_menuItemOpen);
+            contextMenu.Items.Add(new ToolStripSeparator());
+            contextMenu.Items.Add(_menuItemLogFolder);
+            contextMenu.Items.Add(new ToolStripSeparator());
+            contextMenu.Items.Add(_menuItemExit);
+            
+            contextMenu.Opening += new CancelEventHandler(ContextMenuOnPopup);
             _trayIcon = new NotifyIcon()
             {
                 Icon = Resources.JellyfinIcon,
-                ContextMenu = contextMenu,
+                ContextMenuStrip = contextMenu,
                 Visible = true
             };
         }

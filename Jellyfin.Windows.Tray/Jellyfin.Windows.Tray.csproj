@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <ApplicationIcon>JellyfinIcon.ico</ApplicationIcon>
@@ -26,13 +26,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Resources\" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="System.Management" Version="4.6.0" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="4.6.0" />
     <PackageReference Include="System.Text.Json" Version="4.6.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Resources\AppIcon.png">
+      <CopyToOutputDirectory>Never</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>
