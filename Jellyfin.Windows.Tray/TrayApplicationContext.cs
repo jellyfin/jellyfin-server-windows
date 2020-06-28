@@ -50,7 +50,7 @@ namespace Jellyfin.Windows.Tray
                 }
                 catch (Exception ex)
                 {
-                    MessageBox.Show("Couldn't find Jellyfin Installation. The application will now close.");
+                    MessageBox.Show("Error: " + ex.Message + "\r\nCouldn't find Jellyfin Installation. The application will now close.");
                     Application.Exit();
                     return;
                 }
@@ -133,7 +133,7 @@ namespace Jellyfin.Windows.Tray
         {
             if (_runType == RunType.Service && !IsElevated())
             {
-                MessageBox.Show("When running Jellyfin as a service the tray application must be run as Administrator.");
+                MessageBox.Show("When running Jellyfin as a service the tray application must be run as Administrator");
                 return true;
             }
             return false;
