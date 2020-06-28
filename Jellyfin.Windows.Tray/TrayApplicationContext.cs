@@ -35,29 +35,29 @@ namespace Jellyfin.Windows.Tray
 
         public TrayApplicationContext()
         {
-            LoadPortFromJellyfinConfig();
-
             _serviceController = ServiceController.GetServices().FirstOrDefault(s => s.ServiceName == _jellyfinServiceName);
+            RegistryKey registryKey = Registry.LocalMachine.OpenSubKey("Software\\WOW6432Node\\Jellyfin\\Server");
+            if (_serviceController != null)
+            {
+               _runType = RunType.Service;
+            }
+          
             if (_serviceController == null)
             {
-                _executableFile = Path.Combine(_installFolder, "jellyfin.exe");
-                if (!File.Exists(_executableFile))
+                try
                 {
-                    // We could not find the Jellyfin executable file!
-                    MessageBox.Show("Could not find a Jellyfin Installation.");
+                    LoadPortFromJellyfinConfig();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Couldn't find Jellyfin Installation. The application will now close.");
                     Application.Exit();
                     return;
                 }
-
                 _runType = RunType.Executable;
-            }
-            else
-            {
-                _runType = RunType.Service;
             }
 
             CreateTrayIcon();
-
 
             if (!FirstRunDone)
             {
@@ -66,7 +66,6 @@ namespace Jellyfin.Windows.Tray
             }
             else
                 FirstRunDone = true;
-
 
             if (_runType == RunType.Executable)
             {
@@ -112,16 +111,11 @@ namespace Jellyfin.Windows.Tray
 
         private void LoadPortFromJellyfinConfig()
         {
-            try
-            {
-                RegistryKey registryKey = Registry.LocalMachine.OpenSubKey("Software\\Jellyfin\\Server");
-                // registry keys are probably written by a 32bit installer, so check the 32bit registry folder
-                if (registryKey == null)
-                    registryKey = Registry.LocalMachine.OpenSubKey("Software\\WOW6432Node\\Jellyfin\\Server");
+                RegistryKey registryKey = Registry.LocalMachine.OpenSubKey("Software\\WOW6432Node\\Jellyfin\\Server");
                 _installFolder = registryKey.GetValue("InstallFolder").ToString();
                 _dataFolder = registryKey.GetValue("DataFolder").ToString();
                 _configFile = Path.Combine(_dataFolder, "config\\system.xml").ToString();
-
+                _executableFile = Path.Combine(_installFolder, "jellyfin.exe");
 
                 if (File.Exists(_configFile))
                 {
@@ -133,21 +127,13 @@ namespace Jellyfin.Windows.Tray
 
                     _localJellyfinUrl = "http://localhost:" + port + "/web/index.html";
                 }
-            }
-            catch (Exception ex)
-            {
-                // We could not get the Jellyfin port from system.xml config file - just use default?
-                MessageBox.Show("Error: " + ex.Message + "\r\nCouldn't load configuration. The application will now close.");
-                Application.Exit();
-                return;
-            }
         }
 
         private bool CheckShowServiceNotElevatedWarning()
         {
             if (_runType == RunType.Service && !IsElevated())
             {
-                MessageBox.Show("When running Jellyfin as a service the tray application must be run as Administrator");
+                MessageBox.Show("When running Jellyfin as a service the tray application must be run as Administrator.");
                 return true;
             }
             return false;
