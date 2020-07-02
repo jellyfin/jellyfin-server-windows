@@ -15,6 +15,12 @@ pr:
 jobs:
   - job: build
     displayName: 'Build'
+
+    strategy:
+      matrix:
+        installer:
+          BuildConfiguration: windows-installer.amd64
+
     pool:
       vmImage: 'windows-latest'
     steps:
@@ -93,3 +99,18 @@ jobs:
         inputs:
           targetPath: "$(Build.ArtifactStagingDirectory)/setup"
           artifactName: "jellyfin-server-windows"
+
+      - task: CopyFilesOverSSH@0
+        displayName: 'Upload artifacts to repository server'
+        inputs:
+          sshEndpoint: repository
+          sourceFolder: '$(Build.ArtifactStagingDirectory)/setup'
+          contents: 'jellyfin-server-windows*'
+          targetFolder: '/srv/repository/incoming/azure/$(Build.BuildNumber)/$(BuildConfiguration)'
+
+      - task: SSH@0
+        displayName: 'Update Unstable Repository'
+        inputs:
+          sshEndpoint: repository
+          runOptions: 'inline'
+          inline: 'sudo /srv/repository/collect-server.azure.sh /srv/repository/incoming/azure $(Build.BuildNumber) unstable'
