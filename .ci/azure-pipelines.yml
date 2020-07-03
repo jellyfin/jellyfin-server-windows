@@ -15,6 +15,12 @@ pr:
 jobs:
   - job: build
     displayName: 'Build'
+
+    strategy:
+      matrix:
+        installer:
+          BuildConfiguration: windows-installer.amd64
+
     pool:
       vmImage: 'windows-latest'
     steps:
@@ -24,50 +30,33 @@ jobs:
         persistCredentials: true
 
       - task: CmdLine@2
-        displayName: "Clone Server Branch"
-        condition: in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'BuildCompletion')
-        inputs:
-          script: "git clone --single-branch --branch $(Build.SourceBranchName) --depth=1 https://github.com/jellyfin/jellyfin.git $(Build.SourcesDirectory)/jellyfin"
-
-      - task: CmdLine@2
-        displayName: "Clone Server Target"
-        condition: in(variables['Build.Reason'], 'PullRequest')
+        displayName: "Clone Server Target (Unstable)"
+        condition: in(variables['Trigger'], 'Unstable')
         inputs:
           script: "git clone --single-branch --branch master --depth=1 https://github.com/jellyfin/jellyfin.git $(Build.SourcesDirectory)/jellyfin"
 
-      - task: DownloadPipelineArtifact@2
-        displayName: "Download Web Branch"
-        condition: in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI', 'BuildCompletion')
+      - task: CmdLine@2
+        displayName: "Clone Web Target (Unstable)"
+        condition: in(variables['Trigger'], 'Unstable')
         inputs:
-          path: '$(Agent.TempDirectory)'
-          artifact: 'jellyfin-web-production'
-          source: 'specific'
-          project: 'jellyfin'
-          pipeline: 'Jellyfin Web'
-          runBranch: variables['Build.SourceBranch']
+          script: "git clone --single-branch --branch master --depth=1 https://github.com/jellyfin/jellyfin-web.git $(Build.SourcesDirectory)/jellyfin/jellyfin-web"
 
-      - task: DownloadPipelineArtifact@2
-        displayName: "Download Web Target"
-        condition: eq(variables['Build.Reason'], 'PullRequest')
+      - task: CmdLine@2
+        displayName: "Clone Server Target (Stable)"
+        condition: in(variables['Trigger'], 'Stable')
         inputs:
-          path: '$(Agent.TempDirectory)'
-          artifact: 'jellyfin-web-production'
-          source: 'specific'
-          project: 'jellyfin'
-          pipeline: 'Jellyfin Web'
-          runBranch: variables['System.PullRequest.TargetBranch']
+          script: "git clone --single-branch --branch $[TagName] --depth=1 https://github.com/jellyfin/jellyfin.git $(Build.SourcesDirectory)/jellyfin"
 
-      - task: ExtractFiles@1
-        displayName: "Extract Web Client"
+      - task: CmdLine@2
+        displayName: "Clone Web Target (Stable)"
+        condition: in(variables['Trigger'], 'Stable')
         inputs:
-          archiveFilePatterns: '$(Agent.TempDirectory)/*.zip'
-          destinationFolder: '$(Build.SourcesDirectory)/jellyfin/jellyfin-web'
-          cleanDestinationFolder: false
+          script: "git clone --single-branch --branch $[TagName] --depth=1 https://github.com/jellyfin/jellyfin-web.git $(Build.SourcesDirectory)/jellyfin/jellyfin-web"
 
       - task: CmdLine@2
         displayName: "Clone UX Repository"
         inputs:
-          script: 'git clone --depth=1 https://github.com/jellyfin/jellyfin-ux $(Agent.TempDirectory)/jellyfin-ux'
+          script: 'git clone --single-branch --branch master --depth=1 https://github.com/jellyfin/jellyfin-ux $(Agent.TempDirectory)/jellyfin-ux'
 
       - task: PowerShell@2
         displayName: "Build NSIS Installer"
@@ -93,3 +82,18 @@ jobs:
         inputs:
           targetPath: "$(Build.ArtifactStagingDirectory)/setup"
           artifactName: "jellyfin-server-windows"
+
+      - task: CopyFilesOverSSH@0
+        displayName: 'Upload artifacts to repository server'
+        inputs:
+          sshEndpoint: repository
+          sourceFolder: '$(Build.ArtifactStagingDirectory)/setup'
+          contents: 'jellyfin-server-windows*'
+          targetFolder: '/srv/repository/incoming/azure/$(Build.BuildNumber)/$(BuildConfiguration)'
+
+      - task: SSH@0
+        displayName: 'Update Unstable Repository'
+        inputs:
+          sshEndpoint: repository
+          runOptions: 'inline'
+          inline: 'sudo /srv/repository/collect-server.azure.sh /srv/repository/incoming/azure $(Build.BuildNumber) $[Trigger]'
