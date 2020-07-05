@@ -96,4 +96,4 @@ jobs:
         inputs:
           sshEndpoint: repository
           runOptions: 'inline'
-          inline: 'sudo /srv/repository/collect-server.azure.sh /srv/repository/incoming/azure $(Build.BuildNumber) $[Trigger]'
+          inline: 'sudo /srv/repository/collect-server.azure.sh /srv/repository/incoming/azure $(Build.BuildNumber) $(Trigger)'
