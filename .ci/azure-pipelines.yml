@@ -12,6 +12,10 @@ pr:
     include:
     - '*'
 
+variables:
+  - name: Trigger
+    value: Unstable
+
 jobs:
   - job: build
     displayName: 'Build'
