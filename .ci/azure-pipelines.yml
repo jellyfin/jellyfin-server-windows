@@ -60,7 +60,7 @@ jobs:
       - task: CmdLine@2
         displayName: "Clone UX Repository"
         inputs:
-          script: 'git clone --single-branch --branch master --depth=1 https://github.com/jellyfin/jellyfin-ux $(Agent.TempDirectory)/jellyfin-ux'
+          script: "git clone --single-branch --branch master --depth=1 https://github.com/jellyfin/jellyfin-ux $(Agent.TempDirectory)/jellyfin-ux"
 
       - task: PowerShell@2
         displayName: "Build NSIS Installer"
@@ -91,13 +91,13 @@ jobs:
         displayName: 'Upload artifacts to repository server'
         inputs:
           sshEndpoint: repository
-          sourceFolder: '$(Build.ArtifactStagingDirectory)/setup'
+          sourceFolder: "$(Build.ArtifactsDirectory)/setup"
           contents: 'jellyfin-server-windows*'
-          targetFolder: '/srv/repository/incoming/azure/$(Build.BuildNumber)/$(BuildConfiguration)'
+          targetFolder: "/srv/repository/incoming/azure/$(Build.BuildNumber)/$(BuildConfiguration)"
 
       - task: SSH@0
-        displayName: 'Update Unstable Repository'
+        displayName: "Update Unstable Repository"
         inputs:
           sshEndpoint: repository
-          runOptions: 'inline'
-          inline: 'sudo /srv/repository/collect-server.azure.sh /srv/repository/incoming/azure $(Build.BuildNumber) $(Trigger)'
+          runOptions: "inline"
+          inline: "sudo /srv/repository/collect-server.azure.sh /srv/repository/incoming/azure $(Build.BuildNumber) $(Trigger)"
