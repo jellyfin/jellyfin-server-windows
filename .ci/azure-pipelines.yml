@@ -91,7 +91,7 @@ jobs:
         displayName: 'Upload artifacts to repository server'
         inputs:
           sshEndpoint: repository
-          sourceFolder: $(Build.ArtifactsDirectory)/setup
+          sourceFolder: $(System.ArtifactsDirectory)/setup
           contents: 'jellyfin-server-windows*'
           targetFolder: "/srv/repository/incoming/azure/$(Build.BuildNumber)/$(BuildConfiguration)"
 
