@@ -71,27 +71,27 @@ jobs:
           errorActionPreference: "stop"
           workingDirectory: $(Build.SourcesDirectory)/jellyfin
 
-#      - task: CopyFiles@2
-#        displayName: "Copy NSIS Installer"
-#        inputs:
-#          sourceFolder: $(Build.SourcesDirectory)/nsis
-#          contents: "jellyfin*.exe"
-#          targetFolder: $(System.ArtifactsDirectory)/setup
-#          cleanTargetFolder: true
-#          overWrite: true
-#          flattenFolders: true
+      - task: CopyFiles@2
+        displayName: "Copy NSIS Installer"
+        inputs:
+          sourceFolder: $(Build.SourcesDirectory)/nsis
+          contents: "jellyfin*.exe"
+          targetFolder: $(System.ArtifactsDirectory)/setup
+          cleanTargetFolder: true
+          overWrite: true
+          flattenFolders: true
 
-#      - task: PublishPipelineArtifact@0
-#        displayName: "Publish Artifact"
-#        inputs:
-#          targetPath: "$(Build.ArtifactStagingDirectory)/setup"
-#          artifactName: "jellyfin-server-windows"
+      - task: PublishPipelineArtifact@0
+        displayName: "Publish Artifact"
+        inputs:
+          targetPath: "$(Build.ArtifactStagingDirectory)/setup"
+          artifactName: "jellyfin-server-windows"
 
       - task: CopyFilesOverSSH@0
         displayName: 'Upload artifacts to repository server'
         inputs:
           sshEndpoint: repository
-          sourceFolder: $(Build.SourcesDirectory)/nsis
+          sourceFolder: $(System.ArtifactsDirectory)/setup
           contents: 'jellyfin-server-windows*'
           targetFolder: "/srv/repository/incoming/azure/$(Build.BuildNumber)/$(BuildConfiguration)"
 
