@@ -92,7 +92,7 @@ jobs:
         inputs:
           sshEndpoint: repository
           sourceFolder: $(System.ArtifactsDirectory)/setup
-          contents: 'jellyfin-server-windows*'
+          contents: 'jellyfin*.exe'
           targetFolder: "/srv/repository/incoming/azure/$(Build.BuildNumber)/$(BuildConfiguration)"
 
       - task: SSH@0
