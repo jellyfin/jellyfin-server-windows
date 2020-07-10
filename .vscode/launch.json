@@ -10,7 +10,7 @@
             "request": "launch",
             "preLaunchTask": "build",
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/bin/Debug/netcoreapp3.0/JellyfinTray.dll",
+            "program": "${workspaceFolder}/Jellyfin.Windows.Tray/bin/Debug/netcoreapp3.1/win-x64/Jellyfin.Windows.Tray.dll",
             "args": [],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
