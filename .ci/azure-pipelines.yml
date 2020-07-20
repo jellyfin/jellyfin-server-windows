@@ -12,10 +12,6 @@ pr:
     include:
     - '*'
 
-variables:
-  - name: Trigger
-    value: Unstable
-
 jobs:
   - job: build
     displayName: 'Build'
@@ -96,7 +92,7 @@ jobs:
           targetFolder: "/srv/repository/incoming/azure/$(Build.BuildNumber)/$(BuildConfiguration)"
 
       - task: SSH@0
-        displayName: "Update Unstable Repository"
+        displayName: "Update Repository"
         inputs:
           sshEndpoint: repository
           runOptions: "inline"
