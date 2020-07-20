@@ -45,13 +45,13 @@ jobs:
         displayName: "Clone Server Target (Stable)"
         condition: in(variables['Trigger'], 'Stable')
         inputs:
-          script: "git clone --single-branch --branch tag/$(TagName) --depth=1 https://github.com/jellyfin/jellyfin.git $(Build.SourcesDirectory)/jellyfin"
+          script: "git clone --single-branch --branch $(TagName) --depth=1 https://github.com/jellyfin/jellyfin.git $(Build.SourcesDirectory)/jellyfin"
 
       - task: CmdLine@2
         displayName: "Clone Web Target (Stable)"
         condition: in(variables['Trigger'], 'Stable')
         inputs:
-          script: "git clone --single-branch --branch tag/$(TagName) --depth=1 https://github.com/jellyfin/jellyfin-web.git $(Build.SourcesDirectory)/jellyfin/jellyfin-web"
+          script: "git clone --single-branch --branch $(TagName) --depth=1 https://github.com/jellyfin/jellyfin-web.git $(Build.SourcesDirectory)/jellyfin/jellyfin-web"
 
       - task: CmdLine@2
         displayName: "Clone UX Repository"
