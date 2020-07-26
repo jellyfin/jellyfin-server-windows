@@ -43,6 +43,7 @@ function Build-Jellyfin {
     Write-Verbose "InstallLocation: $ResolvedInstallLocation"
     Write-Verbose "DotNetVerbosity: $DotNetVerbosity"
     dotnet publish --self-contained -c $BuildType --output $ResolvedInstallLocation -v $DotNetVerbosity -p:GenerateDocumentationFile=false -p:DebugSymbols=false -p:DebugType=none --runtime `"$windowsversion-$Architecture`" Jellyfin.Server
+
 }
 
 function Install-FFMPEG {
@@ -157,7 +158,8 @@ function Install-TrayApp {
     }else{
         Write-Verbose "Downloading Tray App and copying to Jellyfin location"
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        Invoke-WebRequest -Uri https://github.com/jellyfin/jellyfin-windows-tray/releases/latest/download/JellyfinTray.exe -UseBasicParsing -OutFile "$installLocation/JellyfinTray.exe" | Write-Verbose
+        # Invoke-WebRequest -Uri https://github.com/jellyfin/jellyfin-windows-tray/releases/latest/download/JellyfinTray.exe -UseBasicParsing -OutFile "$installLocation/JellyfinTray.exe" | Write-Verbose
+        dotnet publish --self-contained -c $BuildType --output $ResolvedInstallLocation -v $DotNetVerbosity -p:GenerateDocumentationFile=false -p:DebugSymbols=false -p:DebugType=none --runtime `"$windowsversion-$Architecture`" Jellyfin.Windows.Tray
     }
 }
 
