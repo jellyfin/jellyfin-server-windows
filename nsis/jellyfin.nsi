@@ -246,7 +246,7 @@ ${If} $_INSTALLSERVICE_ == "Yes" ; Only run this if we're going to install the s
     Sleep 3000
     ${If} $_SERVICEACCOUNTTYPE_ == "NetworkService" ; the default install using NSSM is Local System
         ConfigureNetworkServiceRetry:
-        ExecWait '"$INSTDIR\nssm.exe" set JellyfinServer Objectname "Network Service"' $0
+        ExecWait '"$INSTDIR\nssm.exe" set JellyfinServer Objectname "NT Authority\NetworkService"' $0
         ${If} $0 <> 0
             !insertmacro ShowError "Could not configure the Jellyfin Server service account." ConfigureNetworkServiceRetry
         ${EndIf}
