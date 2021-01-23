@@ -41,7 +41,7 @@ namespace Jellyfin.Windows.Tray
             {
                _runType = RunType.Service;
             }
-          
+
             if (_serviceController == null)
             {
                 try
@@ -69,7 +69,7 @@ namespace Jellyfin.Windows.Tray
 
             if (_runType == RunType.Executable)
             {
-                // check if Jellyfin is already runnning, is not start it
+                // check if Jellyfin is already runnning, if not, start it
                 if (Process.GetProcessesByName("jellyfin").Length == 0)
                     Start(null, null);
             }
@@ -84,11 +84,8 @@ namespace Jellyfin.Windows.Tray
             _menuItemLogFolder = new ToolStripMenuItem("Show Logs", null, ShowLogs);
             _menuItemExit = new ToolStripMenuItem("Exit",null, Exit);
 
-            
 
-            
-
-            ContextMenuStrip contextMenu = new ContextMenuStrip(); 
+            ContextMenuStrip contextMenu = new ContextMenuStrip();
             contextMenu.Items.Add(_menuItemAutostart);
             contextMenu.Items.Add(new ToolStripSeparator());
             contextMenu.Items.Add(_menuItemStart);
@@ -99,7 +96,7 @@ namespace Jellyfin.Windows.Tray
             contextMenu.Items.Add(_menuItemLogFolder);
             contextMenu.Items.Add(new ToolStripSeparator());
             contextMenu.Items.Add(_menuItemExit);
-            
+
             contextMenu.Opening += new CancelEventHandler(ContextMenuOnPopup);
             _trayIcon = new NotifyIcon()
             {
@@ -133,7 +130,7 @@ namespace Jellyfin.Windows.Tray
         {
             if (_runType == RunType.Service && !IsElevated())
             {
-                MessageBox.Show("When running Jellyfin as a service the tray application must be run as Administrator");
+                MessageBox.Show("When running Jellyfin as a service, the tray application must be run as Administrator.");
                 return true;
             }
             return false;
