@@ -104,7 +104,7 @@ CRCCheck on ; make sure the installer wasn't corrupted while downloading
     !define MUI_PAGE_CUSTOMFUNCTION_PRE HideDataDirectoryPage ; Controls when to hide / show
     !define MUI_PAGE_HEADER_TEXT "Choose Data Location"
     !define MUI_PAGE_HEADER_SUBTEXT "Choose the folder in which to install the Jellyfin Server data."
-    !define MUI_DIRECTORYPAGE_TEXT_TOP "The installer will set the following folder for Jellyfin Server data. To install in a different folder, click Browse and select another folder. Please make sure the folder exists and is accessible. Click Next to continue."
+    !define MUI_DIRECTORYPAGE_TEXT_TOP "The installer will set the following folder for Jellyfin Server data. To install in a different folder, click Browse and select another folder. Please make sure the folder exists and is accessible. Do not choose the server install folder. Click Next to continue."
     !define MUI_DIRECTORYPAGE_TEXT_DESTINATION "Data folder"
     !define MUI_DIRECTORYPAGE_VARIABLE $_JELLYFINDATADIR_
     !insertmacro MUI_PAGE_DIRECTORY
@@ -281,7 +281,7 @@ Section "Create Shortcuts" CreateWinShortcuts
         CreateShortCut "$SMPROGRAMS\Jellyfin Server\Jellyfin (View Console).lnk" "$INSTDIR\jellyfin.exe" "--datadir $\"$_JELLYFINDATADIR_$\"" "$INSTDIR\icon.ico" 0 SW_SHOWMAXIMIZED
         CreateShortCut "$SMPROGRAMS\Jellyfin Server\Jellyfin Tray App.lnk" "$INSTDIR\jellyfintray.exe" "" "$INSTDIR\icon.ico" 0
         ;CreateShortCut "$DESKTOP\Jellyfin Server.lnk" "$INSTDIR\jellyfin.exe" "--datadir $\"$_JELLYFINDATADIR_$\"" "$INSTDIR\icon.ico" 0 SW_SHOWMINIMIZED
-        CreateShortCut "$DESKTOP\Jellyfin Server\Jellyfin Server.lnk" "$INSTDIR\jellyfintray.exe" "" "$INSTDIR\icon.ico" 0
+        CreateShortCut "$DESKTOP\Jellyfin Server.lnk" "$INSTDIR\jellyfintray.exe" "" "$INSTDIR\icon.ico" 0
     ${EndIf}
 SectionEnd
 
