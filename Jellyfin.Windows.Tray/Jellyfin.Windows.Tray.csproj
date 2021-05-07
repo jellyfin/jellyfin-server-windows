@@ -8,7 +8,7 @@
     <ApplicationIcon>JellyfinIcon.ico</ApplicationIcon>
     <PublishTrimmed>false</PublishTrimmed>
     <PublishSingleFile>false</PublishSingleFile>
-    <Version>1.1.0</Version>
+    <Version>1.2.0</Version>
     <Authors>Jellyfin Project</Authors>
     <Company>Jellyfin Project</Company>
     <Product>Jellyfin Tray for Windows</Product>
