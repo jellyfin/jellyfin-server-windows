@@ -20,7 +20,7 @@ namespace Jellyfin.Windows.Tray
         private string _configFile;
         private string _networkFile;
         private bool FirstRunDone = false;
-        private string NetworkAddress;
+        private string _networkAddress;
         private string _executableFile;
         private string _dataFolder = @"C:\ProgramData\Jellyfin\Server";
         private string _localJellyfinUrl = "http://localhost:8096/web/index.html";
@@ -128,10 +128,10 @@ namespace Jellyfin.Windows.Tray
                     XDocument networkXml = XDocument.Load(_networkFile);
                     XPathNavigator NetworkReader = networkXml.CreateNavigator();
 
-                    NetworkAddress = NetworkReader.SelectSingleNode("/NetworkConfiguration/LocalNetworkAddresses").Value;
+                    _networkAddress = NetworkReader.SelectSingleNode("/NetworkConfiguration/LocalNetworkAddresses").Value;
 
-                    if (string.IsNullOrEmpty(NetworkAddress)) {
-                        _localJellyfinUrl = "http://localhost:" + port + "/web/index.html";
+                    if (string.IsNullOrEmpty(_networkAddress)) {
+                    _localJellyfinUrl = "http://localhost:" + port + "/web/index.html";
                     } else {
                     _localJellyfinUrl = "http://" + NetworkAddress + ":"+  port + "/web/index.html";
                     }
