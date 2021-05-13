@@ -117,6 +117,7 @@ namespace Jellyfin.Windows.Tray
                 _configFile = Path.Combine(_dataFolder, "config\\system.xml").ToString();
                 _networkFile = Path.Combine(_dataFolder, "config\\network.xml").ToString();
                 _executableFile = Path.Combine(_installFolder, "jellyfin.exe");
+                _port = "8096";
 
                 if (File.Exists(_configFile))
                 {
