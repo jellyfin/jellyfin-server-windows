@@ -19,6 +19,7 @@ namespace Jellyfin.Windows.Tray
         private readonly string _autostartKey = "JellyfinTray";
         private string _configFile;
         private string _networkFile;
+        private string _port;
         private bool FirstRunDone = false;
         private string _networkAddress;
         private string _executableFile;
@@ -48,7 +49,7 @@ namespace Jellyfin.Windows.Tray
             {
                 try
                 {
-                    LoadPortFromJellyfinConfig();
+                    LoadJellyfinConfig();
                 }
                 catch (Exception ex)
                 {
@@ -108,7 +109,7 @@ namespace Jellyfin.Windows.Tray
             };
         }
 
-        private void LoadPortFromJellyfinConfig()
+        private void LoadJellyfinConfig()
         {
                 RegistryKey registryKey = Registry.LocalMachine.OpenSubKey("Software\\WOW6432Node\\Jellyfin\\Server");
                 _installFolder = registryKey.GetValue("InstallFolder").ToString();
@@ -123,19 +124,21 @@ namespace Jellyfin.Windows.Tray
                     XPathNavigator SettingsReader = systemXml.CreateNavigator();
 
                     FirstRunDone = SettingsReader.SelectSingleNode("/ServerConfiguration/IsStartupWizardCompleted").ValueAsBoolean;
-                    string port = SettingsReader.SelectSingleNode("/ServerConfiguration/PublicPort").Value;
-
+                    _port = SettingsReader.SelectSingleNode("/ServerConfiguration/PublicPort").Value;
+                }
+                if (File.Exists(_networkFile))
+                {
                     XDocument networkXml = XDocument.Load(_networkFile);
                     XPathNavigator NetworkReader = networkXml.CreateNavigator();
 
                     _networkAddress = NetworkReader.SelectSingleNode("/NetworkConfiguration/LocalNetworkAddresses").Value;
-
-                    if (string.IsNullOrEmpty(_networkAddress)) {
-                    _localJellyfinUrl = "http://localhost:" + port + "/web/index.html";
-                    } else {
-                    _localJellyfinUrl = "http://" + NetworkAddress + ":"+  port + "/web/index.html";
-                    }
                 }
+
+                if (string.IsNullOrEmpty(_networkAddress))
+                {
+                _networkAddress = "localhost";
+                }
+                _localJellyfinUrl = "http://" + _networkAddress + ":"+  _port + "/web/index.html";
         }
 
         private bool CheckShowServiceNotElevatedWarning()
