@@ -125,7 +125,11 @@ namespace Jellyfin.Windows.Tray
                     XPathNavigator SettingsReader = systemXml.CreateNavigator();
 
                     FirstRunDone = SettingsReader.SelectSingleNode("/ServerConfiguration/IsStartupWizardCompleted").ValueAsBoolean;
-                    _port = SettingsReader.SelectSingleNode("/ServerConfiguration/PublicPort").Value;
+                    var publicPort = SettingsReader.SelectSingleNode("/ServerConfiguration/PublicPort")?.Value;
+                    if (!string.IsNullOrEmpty(publicPort))
+                    {
+                        _port = publicPort;
+                    }
                 }
                 if (File.Exists(_networkFile))
                 {
