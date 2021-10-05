@@ -315,6 +315,7 @@ Section "Uninstall"
 
     PreserveData:
 
+    ExecWait "TaskKill /IM Jellyfin.Windows.Tray.exe /F"
     ExecWait '"$INSTDIR\nssm.exe" statuscode JellyfinServer' $0
     DetailPrint "Jellyfin Server service statuscode, $0"
     IntCmp $0 0 NoServiceUninstall ; service doesn't exist, may be run from desktop shortcut
