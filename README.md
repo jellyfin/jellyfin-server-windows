@@ -100,7 +100,10 @@ If you choose to build Jellyfin server on your own, you will also require:
 6. Go to the directory where NSIS is installed. In most systems, this is at `C:\Program Files (x86)`.
     * e.g. `cd 'C:\Program Files (x86)\NSIS'`.
 7. Run the following command, substituting the path to your `jellyfin-ux` files and the NSIS script from this repository:
-    * `./makensis /Dx64 /DUXPATH=C:\Users\Anthony\Downloads\jellyfin-ux-master "C:\Users\Anthony\Downloads\jellyfin-server-windows\nsis\jellyfin.nsi"`
+    
+    ```
+    ./makensis /Dx64 /DUXPATH=C:\Users\Anthony\Downloads\jellyfin-ux-master "C:\Users\Anthony\Downloads\jellyfin-server-windows\nsis\jellyfin.nsi"
+    ```
 
 8. Wait for the installer to build. When complete, it will be located next to the NSIS script file. It is now ready to be used.
 
