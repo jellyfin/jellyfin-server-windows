@@ -70,6 +70,8 @@ Location: `HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Jellyfin\Server`
 * InstallFolder must be the location where ` jellyfin.exe` can be found.
 * ServiceAccountType is "None" unless Jellyfin is installed as a service, in which case it will either be "LocalSystem" or "NetworkService".
 
+If you want to quickly import these default paths, you can use `Jellyfin Registry.reg` in the `Support Files` folder to do so.
+
 When the tray app is started, it will check if Jellyfin is installed as a service with the name `JellyfinServer`, and if located it will start the service (unless it is already running). If the server is not installed as a service, it will look to the registry for the location of the config files and executable, and launch the executable with the data folder path as an argument. If the registry keys are not found, it will close with an error that an installation was not located.
 
 To open the Web UI, the app will look for a network config in the DataFolder, and open the user's default browser to the path. To open the Log Folder, the app will launch Windows Explorer to the DataFolder path, appending `\Log` to the end.
