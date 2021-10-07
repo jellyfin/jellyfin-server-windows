@@ -43,6 +43,7 @@ Do you want to build Jellyfin's tray app or installer for yourself? Read on!
 ## Compiling the Tray App
 ### Requirements
 * [.NET 5.0 SDK](https://dotnet.microsoft.com/download)
+    * **NOTE**: This SDK should always match the version that is currently in use for the server.
 
 ### Steps
 1. Build using the dotnet command, or using Visual Studio/VS Code.
@@ -78,6 +79,7 @@ To open the Web UI, the app will look for a network config in the DataFolder, an
 
 ## Building the Installer
 ### Requirements
+* The compiled tray app from above
 * [NSIS 3.x+](https://nsis.sourceforge.io/Download)
 * A copy of the [jellyfin-ux](https://github.com/jellyfin/jellyfin-ux) repository
 * The latest [Jellyfin Windows Combined](https://repo.jellyfin.org/releases/server/windows/versions/stable/combined/) package
@@ -90,17 +92,18 @@ If you choose to build Jellyfin server on your own, you will also require:
 1. Ensure that a complete copy of Jellyfin Server is available in a folder. If using the combined package from above, proceed to the next step.
     * If you are building Jellyfin from source, place a copy of `jellyfin-ffmpeg` or equivalent in the same folder as the server binary. You need to add `ffmpeg.exe` and `ffprobe.exe` alongside `jellyfin.exe`.
 2. Copy the GPLv2 License file either from their website, or the `Support Files` folder, and place it in the same directory as the server. Ensure that it is named `LICENSE` with no extension.
-3. Download a copy of the `jellyfin-ux` repository, or at least have the following files at a path ending with `\branding\NSIS\`:
+3. Copy the contents of the compiled tray app (including its DLLs) into the folder with the server. If there is a duplicate DLL, skip it. We only need to add anything that isn't already included.
+4. Download a copy of the `jellyfin-ux` repository, or at least have the following files at a path ending with `\branding\NSIS\`:
     * modern-install.ico
     * installer-header.bmp
     * installer-right.bmp
-4. Install NSIS if not already available. Be sure to select a Full install.
-5. Open Powershell. Set the environment variable `InstallLocation` to the folder where Jellyfin Server is available.
+5. Install NSIS if not already available. Be sure to select a Full install.
+6. Open Powershell. Set the environment variable `InstallLocation` to the folder where Jellyfin Server is available.
     * e.g. `$env:InstallLocation = "C:\Users\Anthony\Downloads\jellyfin_10.7.7"`
-6. Go to the directory where NSIS is installed. In most systems, this is at `C:\Program Files (x86)`.
+7. Go to the directory where NSIS is installed. In most systems, this is at `C:\Program Files (x86)`.
     * e.g. `cd 'C:\Program Files (x86)\NSIS'`.
-7. Run the following command, substituting the path to your `jellyfin-ux` files and the NSIS script from this repository:
-    
+8. Run the following command, substituting the path to your `jellyfin-ux` files and the NSIS script from this repository:
+
     ```
     .\makensis /Dx64 /DUXPATH=C:\Users\Anthony\Downloads\jellyfin-ux-master "C:\Users\Anthony\Downloads\jellyfin-server-windows\nsis\jellyfin.nsi"
     ```
