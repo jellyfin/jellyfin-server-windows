@@ -42,7 +42,7 @@ Do you want to build Jellyfin's tray app or installer for yourself? Read on!
 
 ## Compiling the Tray App
 ### Requirements
-* [.NET 5.0 SDK](https://dotnet.microsoft.com/download)
+* [.NET 6.0 SDK](https://dotnet.microsoft.com/download)
     * **NOTE**: This SDK should always match the version that is currently in use for the server.
 
 ### Steps
