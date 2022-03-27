@@ -1,12 +1,13 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <!--
-This file was created by NSISDialogDesigner 1.4.4.0
-http://coolsoft.altervista.org/nsisdialogdesigner
+This file was created by NSISDialogDesigner 1.5.0.0
+https://coolsoft.altervista.org/nsisdialogdesigner
 Do not edit manually!
 -->
 <Dialog Name="setuptype" Title="Setup Type" Subtitle="Control how Jellyfin is installed.">
-  <Label Name="InstallasaServiceLabel" Location="12, 115" Size="426, 46" Text="Install Jellyfin as a service. This method is not recommended and is for Advanced Users. Additional setup is required to access network shares. Hardware Accelaration may not work." TabIndex="0" />
-  <RadioButton Name="InstallasaService" Location="12, 88" Size="426, 24" Text="Install as a Service (Advanced Users Only)" TabIndex="1" />
-  <Label Name="BasicInstallLabel" Location="12, 39" Size="426, 46" Text="The basic install will run Jellyfin in your current user account.$\nThis is recommended for most users." TabIndex="2" />
-  <RadioButton Name="BasicInstall" Location="12, 12" Size="426, 24" Text="Basic Install (Recommended)" Font="Microsoft Sans Serif, 8.25pt, style=Bold" Checked="True" TabIndex="3" />
+  <Label Name="Label1" Location="12, 148" Size="351, 23" Text="This method is not recommended and is for Advanced Users. " Font="Microsoft Sans Serif, 9pt, style=Bold" ForeColor="Red" TabIndex="0" />
+  <Label Name="InstallasaServiceLabel" Location="12, 115" Size="426, 46" Text="Install Jellyfin as a service. Additional setup is required to access network shares. Hardware Accelaration may not work." Font="Microsoft Sans Serif, 8.25pt" TabIndex="1" />
+  <RadioButton Name="InstallasaService" Location="12, 88" Size="426, 24" Text="Install as a Service (Advanced Users Only)" TabIndex="2" />
+  <Label Name="BasicInstallLabel" Location="12, 39" Size="426, 46" Text="The basic install will run Jellyfin in your current user account.$\nThis is recommended for most users." TabIndex="3" />
+  <RadioButton Name="BasicInstall" Location="12, 12" Size="426, 24" Text="Basic Install (Recommended)" Font="Microsoft Sans Serif, 8.25pt, style=Bold" Checked="True" TabIndex="4" />
 </Dialog>
