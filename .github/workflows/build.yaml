@@ -1,0 +1,15 @@
+name: 'Build'
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Build
+        run: dotnet build -c Release

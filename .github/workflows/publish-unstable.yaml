@@ -1,0 +1,16 @@
+name: 'Publish Unstable'
+
+on:
+  workflow_dispatch:
+    inputs:
+      jellyfin_version:
+        required: true
+        type: string
+        description: "The Jellyfin version (eg: 20220405.10)"
+
+jobs:
+  publish:
+    uses: ./.github/workflows/_meta-publish.yaml
+    with:
+      jellyfin_version: ${{ github.event.inputs.jellyfin_version }}
+      server_url: ${{ format('https://repo.jellyfin.org/releases/server/windows/versions/unstable/combined/{0}/jellyfin_{0}-unstable.zip', github.event.inputs.jellyfin_version) }}
