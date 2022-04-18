@@ -1,14 +1,15 @@
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Principal;
 using System.ServiceProcess;
 using System.Windows.Forms;
 using System.Xml.Linq;
 using System.Xml.XPath;
-using Jellyfin.Windows.Tray.Properties;
 using Microsoft.Win32;
 
 namespace Jellyfin.Windows.Tray;
@@ -18,6 +19,7 @@ namespace Jellyfin.Windows.Tray;
 /// </summary>
 public class TrayApplicationContext : ApplicationContext
 {
+    private const string TrayIconResourceName = "Jellyfin.Windows.Tray.Resources.JellyfinIcon.ico";
     private readonly string _jellyfinServiceName = "JellyfinServer";
     private readonly string _autostartKey = "JellyfinTray";
     private string _configFile;
@@ -133,7 +135,8 @@ public class TrayApplicationContext : ApplicationContext
         contextMenu.Items.Add(_menuItemExit);
 
         contextMenu.Opening += new CancelEventHandler(ContextMenuOnPopup);
-        _trayIcon = new NotifyIcon() { Icon = Resources.JellyfinIcon, ContextMenuStrip = contextMenu, Visible = true };
+        using var iconStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(TrayIconResourceName);
+        _trayIcon = new NotifyIcon() { Icon = new Icon(iconStream), ContextMenuStrip = contextMenu, Visible = true };
     }
 
     private void LoadJellyfinConfig()
@@ -244,6 +247,7 @@ public class TrayApplicationContext : ApplicationContext
             Process p = new Process();
             p.StartInfo.FileName = _executableFile;
             p.StartInfo.CreateNoWindow = true;
+            p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
             p.StartInfo.Arguments = "--datadir \"" + _dataFolder + "\"";
             p.Start();
         }
