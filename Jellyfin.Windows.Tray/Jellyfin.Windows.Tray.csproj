@@ -43,7 +43,7 @@
     <PackageReference Include="System.Resources.Extensions" Version="6.0.0" />
     <PackageReference Include="System.ServiceProcess.ServiceController" Version="6.0.0" />
   </ItemGroup>
-  
+
   <ItemGroup Condition=" '$(Configuration)' == 'Debug' ">
     <PackageReference Include="SerilogAnalyzer" Version="0.15.0" PrivateAssets="All" />
     <PackageReference Include="StyleCop.Analyzers" Version="1.2.0-beta.406" />
@@ -54,6 +54,7 @@
     <None Update="Resources\AppIcon.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>
     </None>
+    <EmbeddedResource Include="Resources\JellyfinIcon.ico" />
   </ItemGroup>
 
 </Project>
