@@ -171,6 +171,7 @@ public class TrayApplicationContext : ApplicationContext
             if (_requireHTTPS)
             {
                 _uriScheme = "https://";
+                _networkAddress = networkReader.SelectSingleNode("/NetworkConfiguration/BaseUrl").Value;
                 _port = settingsReader.SelectSingleNode("/NetworkConfiguration/HttpsPortNumber")?.Value;
             }
 
