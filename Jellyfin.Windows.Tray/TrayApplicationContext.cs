@@ -26,6 +26,8 @@ public class TrayApplicationContext : ApplicationContext
     private string _networkFile;
     private string _port;
     private bool _firstRunDone = false;
+    private string _uriScheme = "http://";
+    private bool _requireHTTPS = false;
     private string _networkAddress;
     private string _executableFile;
     private string _dataFolder = @"C:\ProgramData\Jellyfin\Server";
@@ -147,7 +149,6 @@ public class TrayApplicationContext : ApplicationContext
         _configFile = Path.Combine(_dataFolder, "config\\system.xml").ToString();
         _networkFile = Path.Combine(_dataFolder, "config\\network.xml").ToString();
         _executableFile = Path.Combine(_installFolder, "jellyfin.exe");
-        _port = "8096";
 
         if (File.Exists(_configFile))
         {
@@ -155,11 +156,7 @@ public class TrayApplicationContext : ApplicationContext
             XPathNavigator settingsReader = systemXml.CreateNavigator();
 
             _firstRunDone = settingsReader.SelectSingleNode("/ServerConfiguration/IsStartupWizardCompleted").ValueAsBoolean;
-            var publicPort = settingsReader.SelectSingleNode("/ServerConfiguration/PublicPort")?.Value;
-            if (!string.IsNullOrEmpty(publicPort))
-            {
-                _port = publicPort;
-            }
+
         }
 
         if (File.Exists(_networkFile))
@@ -167,7 +164,21 @@ public class TrayApplicationContext : ApplicationContext
             XDocument networkXml = XDocument.Load(_networkFile);
             XPathNavigator networkReader = networkXml.CreateNavigator();
 
+            _requireHTTPS = settingsReader.SelectSingleNode("/NetworkConfiguration/RequireHttps").ValueAsBoolean;
             _networkAddress = networkReader.SelectSingleNode("/NetworkConfiguration/LocalNetworkAddresses").Value;
+            _port = settingsReader.SelectSingleNode("/NetworkConfiguration/PublicPort")?.Value;
+
+            if (_requireHTTPS)
+            {
+                _uriScheme = "https://";
+                _port = settingsReader.SelectSingleNode("/NetworkConfiguration/HttpsPortNumber")?.Value;
+            }
+
+        }
+
+        if (string.IsNullOrEmpty(_port))
+        {
+            _port = "8096";
         }
 
         if (string.IsNullOrEmpty(_networkAddress))
@@ -175,7 +186,7 @@ public class TrayApplicationContext : ApplicationContext
             _networkAddress = "localhost";
         }
 
-        _localJellyfinUrl = "http://" + _networkAddress + ":" + _port + "/web/index.html";
+        _localJellyfinUrl = _uriScheme + _networkAddress + ":" + _port + "/web/index.html";
     }
 
     private bool CheckShowServiceNotElevatedWarning()
