@@ -166,13 +166,13 @@ public class TrayApplicationContext : ApplicationContext
 
             _requireHTTPS = settingsReader.SelectSingleNode("/NetworkConfiguration/RequireHttps").ValueAsBoolean;
             _networkAddress = networkReader.SelectSingleNode("/NetworkConfiguration/LocalNetworkAddresses").Value;
-            _port = settingsReader.SelectSingleNode("/NetworkConfiguration/PublicPort")?.Value;
+            _port = networkReader.SelectSingleNode("/NetworkConfiguration/PublicPort")?.Value;
 
             if (_requireHTTPS)
             {
                 _uriScheme = "https://";
                 _networkAddress = networkReader.SelectSingleNode("/NetworkConfiguration/BaseUrl").Value;
-                _port = settingsReader.SelectSingleNode("/NetworkConfiguration/HttpsPortNumber")?.Value;
+                _port = networkReader.SelectSingleNode("/NetworkConfiguration/HttpsPortNumber")?.Value;
             }
 
         }
