@@ -26,8 +26,6 @@ public class TrayApplicationContext : ApplicationContext
     private string _networkFile;
     private string _port;
     private bool _firstRunDone = false;
-    private string _uriScheme = "http://";
-    private bool _requireHTTPS = false;
     private string _networkAddress;
     private string _executableFile;
     private string _dataFolder = @"C:\ProgramData\Jellyfin\Server";
@@ -164,16 +162,8 @@ public class TrayApplicationContext : ApplicationContext
             XDocument networkXml = XDocument.Load(_networkFile);
             XPathNavigator networkReader = networkXml.CreateNavigator();
 
-            _requireHTTPS = settingsReader.SelectSingleNode("/NetworkConfiguration/RequireHttps").ValueAsBoolean;
             _networkAddress = networkReader.SelectSingleNode("/NetworkConfiguration/LocalNetworkAddresses").Value;
             _port = networkReader.SelectSingleNode("/NetworkConfiguration/PublicPort")?.Value;
-
-            if (_requireHTTPS)
-            {
-                _uriScheme = "https://";
-                _networkAddress = networkReader.SelectSingleNode("/NetworkConfiguration/BaseUrl").Value;
-                _port = networkReader.SelectSingleNode("/NetworkConfiguration/HttpsPortNumber")?.Value;
-            }
 
         }
 
@@ -187,7 +177,7 @@ public class TrayApplicationContext : ApplicationContext
             _networkAddress = "localhost";
         }
 
-        _localJellyfinUrl = _uriScheme + _networkAddress + ":" + _port + "/web/index.html";
+        _localJellyfinUrl = "http://" + _networkAddress + ":" + _port + "/web/index.html";
     }
 
     private bool CheckShowServiceNotElevatedWarning()
