@@ -154,7 +154,6 @@ public class TrayApplicationContext : ApplicationContext
             XPathNavigator settingsReader = systemXml.CreateNavigator();
 
             _firstRunDone = settingsReader.SelectSingleNode("/ServerConfiguration/IsStartupWizardCompleted").ValueAsBoolean;
-
         }
 
         if (File.Exists(_networkFile))
