@@ -164,7 +164,6 @@ public class TrayApplicationContext : ApplicationContext
 
             _networkAddress = networkReader.SelectSingleNode("/NetworkConfiguration/LocalNetworkAddresses").Value;
             _port = networkReader.SelectSingleNode("/NetworkConfiguration/PublicPort")?.Value;
-
         }
 
         if (string.IsNullOrEmpty(_port))
