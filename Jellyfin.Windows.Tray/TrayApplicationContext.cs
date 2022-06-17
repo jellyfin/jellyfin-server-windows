@@ -147,7 +147,6 @@ public class TrayApplicationContext : ApplicationContext
         _configFile = Path.Combine(_dataFolder, "config\\system.xml").ToString();
         _networkFile = Path.Combine(_dataFolder, "config\\network.xml").ToString();
         _executableFile = Path.Combine(_installFolder, "jellyfin.exe");
-        _port = "8096";
 
         if (File.Exists(_configFile))
         {
@@ -155,11 +154,6 @@ public class TrayApplicationContext : ApplicationContext
             XPathNavigator settingsReader = systemXml.CreateNavigator();
 
             _firstRunDone = settingsReader.SelectSingleNode("/ServerConfiguration/IsStartupWizardCompleted").ValueAsBoolean;
-            var publicPort = settingsReader.SelectSingleNode("/ServerConfiguration/PublicPort")?.Value;
-            if (!string.IsNullOrEmpty(publicPort))
-            {
-                _port = publicPort;
-            }
         }
 
         if (File.Exists(_networkFile))
@@ -168,6 +162,12 @@ public class TrayApplicationContext : ApplicationContext
             XPathNavigator networkReader = networkXml.CreateNavigator();
 
             _networkAddress = networkReader.SelectSingleNode("/NetworkConfiguration/LocalNetworkAddresses").Value;
+            _port = networkReader.SelectSingleNode("/NetworkConfiguration/PublicPort")?.Value;
+        }
+
+        if (string.IsNullOrEmpty(_port))
+        {
+            _port = "8096";
         }
 
         if (string.IsNullOrEmpty(_networkAddress))
