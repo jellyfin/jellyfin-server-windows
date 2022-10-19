@@ -12,7 +12,7 @@ param(
     [ValidateSet('Debug', 'Release')][string]$BuildType = 'Release',
     [ValidateSet('Quiet', 'Minimal', 'Normal')][string]$DotNetVerbosity = 'Minimal',
     [ValidateSet('win', 'win7', 'win8', 'win81', 'win10')][string]$WindowsVersion = 'win',
-    [ValidateSet('x64', 'x86', 'arm', 'arm64')][string]$Architecture = 'x64'
+    [ValidateSet('x64', 'arm', 'arm64')][string]$Architecture = 'x64'
 )
 
 # Speed up all downloads by hiding progress bars
@@ -32,7 +32,7 @@ $ResolvedUXLocation = Resolve-Path $UXLocation
 
 function Build-Jellyfin {
     if(($Architecture -eq 'arm64') -and ($WindowsVersion -ne 'win10')){
-        Write-Error "arm64 only supported with Windows10 Version"
+        Write-Error "arm64 only supported with Windows 10 Version"
         exit
     }
     if(($Architecture -eq 'arm') -and ($WindowsVersion -notin @('win10','win81','win8'))){
@@ -48,35 +48,27 @@ function Build-Jellyfin {
 function Install-FFMPEG {
     param(
         [string]$ResolvedInstallLocation,
-        [string]$Architecture,
-        [string]$FFMPEGVersionX86 = "ffmpeg-4.2.1-win32-shared"
+        [string]$Architecture
     )
 
     Write-Verbose "Checking Architecture"
-    if($Architecture -notin @('x86','x64')){
+    if($Architecture -notin @('x64')){
         Write-Warning "No builds available for your selected architecture of $Architecture"
-        Write-Warning "FFMPEG will not be installed"
+        Write-Warning "FFMPEG will not be installed."
     }elseif($Architecture -eq 'x64'){
          Write-Verbose "Downloading 64 bit FFMPEG"
          Invoke-WebRequest -Uri https://repo.jellyfin.org/releases/server/windows/ffmpeg/jellyfin-ffmpeg.zip -UseBasicParsing -OutFile "$tempdir/ffmpeg.zip" | Write-Verbose
-    }else{
-         Write-Verbose "Downloading 32 bit FFMPEG"
-         Invoke-WebRequest -Uri https://ffmpeg.zeranoe.com/builds/win32/shared/$FFMPEGVersionX86.zip -UseBasicParsing -OutFile "$tempdir/ffmpeg.zip" | Write-Verbose
+       Expand-Archive "$tempdir/ffmpeg.zip" -DestinationPath "$tempdir/ffmpeg/" -Force | Write-Verbose      
     }
 
-    Expand-Archive "$tempdir/ffmpeg.zip" -DestinationPath "$tempdir/ffmpeg/" -Force | Write-Verbose
+
     if($Architecture -eq 'x64'){
         Write-Verbose "Copying Binaries to Jellyfin location"
         Get-ChildItem "$tempdir/ffmpeg" | ForEach-Object {
             Copy-Item $_.FullName -Destination $installLocation | Write-Verbose
         }
-    }else{
-        Write-Verbose "Copying Binaries to Jellyfin location"
-        Get-ChildItem "$tempdir/ffmpeg/$FFMPEGVersionX86/bin" | ForEach-Object {
-            Copy-Item $_.FullName -Destination $installLocation | Write-Verbose
-        }
     }
-
+    
     Remove-Item "$tempdir/ffmpeg/" -Recurse -Force -ErrorAction Continue | Write-Verbose
     Remove-Item "$tempdir/ffmpeg.zip" -Force -ErrorAction Continue | Write-Verbose
 }
@@ -88,14 +80,13 @@ function Install-NSSM {
     )
 
     Write-Verbose "Checking Architecture"
-    if($Architecture -notin @('x86','x64')){
+    if($Architecture -notin @('x64')){
         Write-Warning "No builds available for your selected architecture of $Architecture"
         Write-Warning "NSSM will not be installed"
     }else{
          Write-Verbose "Downloading NSSM"
-         # [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-         # File is hosted in an azure blob with a custom domain in front for brevity
-         Invoke-WebRequest -Uri http://files.evilt.win/nssm/nssm-2.24-101-g897c7ad.zip -UseBasicParsing -OutFile "$tempdir/nssm.zip" | Write-Verbose
+         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+         Invoke-WebRequest -Uri https://repo.jellyfin.org/releases/other/nssm-2.24-101-g897c7ad.zip UseBasicParsing -OutFile "$tempdir/nssm.zip" | Write-Verbose
     }
 
     Expand-Archive "$tempdir/nssm.zip" -DestinationPath "$tempdir/nssm/" -Force | Write-Verbose
