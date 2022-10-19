@@ -1,14 +1,9 @@
 [CmdletBinding()]
 param(
-    [switch]$MakeNSIS,
-    [switch]$InstallNSIS,
     [switch]$InstallFFMPEG,
-    [switch]$InstallNSSM,
     [switch]$SkipJellyfinBuild,
     [switch]$GenerateZip,
-    [string]$InstallLocation = "./dist/jellyfin-win-nsis",
-    [string]$UXLocation = "../jellyfin-ux",
-    [switch]$InstallTrayApp,
+    [string]$InstallLocation = "$Env:AppData\Jellyfin-Server\",
     [ValidateSet('Debug', 'Release')][string]$BuildType = 'Release',
     [ValidateSet('Quiet', 'Minimal', 'Normal')][string]$DotNetVerbosity = 'Minimal',
     [ValidateSet('win', 'win7', 'win8', 'win81', 'win10')][string]$WindowsVersion = 'win',
@@ -28,7 +23,6 @@ if(($PSVersionTable.PSEdition -eq 'Core') -and (-not $IsWindows)){
 New-Item -ItemType Directory -Force -Path $InstallLocation
 
 $ResolvedInstallLocation = Resolve-Path $InstallLocation
-$ResolvedUXLocation = Resolve-Path $UXLocation
 
 function Build-Jellyfin {
     if(($Architecture -eq 'arm64') -and ($WindowsVersion -ne 'win10')){
@@ -73,84 +67,6 @@ function Install-FFMPEG {
     Remove-Item "$tempdir/ffmpeg.zip" -Force -ErrorAction Continue | Write-Verbose
 }
 
-function Install-NSSM {
-    param(
-        [string]$ResolvedInstallLocation,
-        [string]$Architecture
-    )
-
-    Write-Verbose "Checking Architecture"
-    if($Architecture -notin @('x64')){
-        Write-Warning "No builds available for your selected architecture of $Architecture"
-        Write-Warning "NSSM will not be installed"
-    }else{
-         Write-Verbose "Downloading NSSM"
-         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-         Invoke-WebRequest -Uri https://repo.jellyfin.org/releases/other/nssm-2.24-101-g897c7ad.zip UseBasicParsing -OutFile "$tempdir/nssm.zip" | Write-Verbose
-    }
-
-    Expand-Archive "$tempdir/nssm.zip" -DestinationPath "$tempdir/nssm/" -Force | Write-Verbose
-    if($Architecture -eq 'x64'){
-        Write-Verbose "Copying Binaries to Jellyfin location"
-        Get-ChildItem "$tempdir/nssm/nssm-2.24-101-g897c7ad/win64" | ForEach-Object {
-            Copy-Item $_.FullName -Destination $installLocation | Write-Verbose
-        }
-    }else{
-        Write-Verbose "Copying Binaries to Jellyfin location"
-        Get-ChildItem "$tempdir/nssm/nssm-2.24-101-g897c7ad/win32" | ForEach-Object {
-            Copy-Item $_.FullName -Destination $installLocation | Write-Verbose
-        }
-    }
-
-    Remove-Item "$tempdir/nssm/" -Recurse -Force -ErrorAction Continue | Write-Verbose
-    Remove-Item "$tempdir/nssm.zip" -Force -ErrorAction Continue | Write-Verbose
-}
-
-function Make-NSIS {
-    param(
-        [string]$ResolvedInstallLocation
-    )
-
-    $env:InstallLocation = $ResolvedInstallLocation
-    if($InstallNSIS.IsPresent -or ($InstallNSIS -eq $true)){
-        & "$tempdir/nsis/nsis-3.04/makensis.exe" /D$Architecture /DUXPATH=$ResolvedUXLocation "..\nsis\jellyfin.nsi"
-    } else {
-        & "makensis" /D$Architecture /DUXPATH=$ResolvedUXLocation "..\nsis\jellyfin.nsi"
-    }
-
-    Copy-Item ..\nsis\jellyfin* $ResolvedInstallLocation\..
-}
-
-
-function Install-NSIS {
-    Write-Verbose "Downloading NSIS"
-    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    Invoke-WebRequest -Uri https://nchc.dl.sourceforge.net/project/nsis/NSIS%203/3.04/nsis-3.04.zip -UseBasicParsing -OutFile "$tempdir/nsis.zip" | Write-Verbose
-
-    Expand-Archive "$tempdir/nsis.zip" -DestinationPath "$tempdir/nsis/" -Force | Write-Verbose
-}
-
-function Clean-NSIS {
-    Remove-Item "$tempdir/nsis/" -Recurse -Force -ErrorAction Continue | Write-Verbose
-    Remove-Item "$tempdir/nsis.zip" -Force -ErrorAction Continue | Write-Verbose
-}
-
-function Install-TrayApp {
-    param(
-        [string]$ResolvedInstallLocation,
-        [string]$Architecture
-    )
-
-    Write-Verbose "Checking Architecture"
-    if($Architecture -ne 'x64'){
-        Write-Warning "No builds available for your selected architecture of $Architecture"
-        Write-Warning "The tray app will not be available."
-    }else{
-        Write-Verbose "Downloading Tray App and copying to Jellyfin location"
-        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-        Invoke-WebRequest -Uri https://github.com/jellyfin/jellyfin-windows-tray/releases/latest/download/JellyfinTray.exe -UseBasicParsing -OutFile "$installLocation/JellyfinTray.exe" | Write-Verbose
-    }
-}
 
 if(-not $SkipJellyfinBuild.IsPresent -and -not ($InstallNSIS -eq $true)){
     Write-Verbose "Starting Build Process: Selected Environment is $WindowsVersion-$Architecture"
@@ -160,27 +76,7 @@ if($InstallFFMPEG.IsPresent -or ($InstallFFMPEG -eq $true)){
     Write-Verbose "Starting FFMPEG Install"
     Install-FFMPEG $ResolvedInstallLocation $Architecture
 }
-if($InstallNSSM.IsPresent -or ($InstallNSSM -eq $true)){
-    Write-Verbose "Starting NSSM Install"
-    Install-NSSM $ResolvedInstallLocation $Architecture
-}
-if($InstallTrayApp.IsPresent -or ($InstallTrayApp -eq $true)){
-    Write-Verbose "Downloading Windows Tray App"
-    Install-TrayApp $ResolvedInstallLocation $Architecture
-}
-Copy-Item .\LICENSE $ResolvedInstallLocation\LICENSE
-if($InstallNSIS.IsPresent -or ($InstallNSIS -eq $true)){
-    Write-Verbose "Installing NSIS"
-    Install-NSIS
-}
-if($MakeNSIS.IsPresent -or ($MakeNSIS -eq $true)){
-    Write-Verbose "Starting NSIS Package Creation"
-    Make-NSIS $ResolvedInstallLocation
-}
-if($InstallNSIS.IsPresent -or ($InstallNSIS -eq $true)){
-    Write-Verbose "Clean NSIS"
-    Clean-NSIS
-}
+
 if($GenerateZip.IsPresent -or ($GenerateZip -eq $true)){
     Compress-Archive -Path $ResolvedInstallLocation -DestinationPath "$ResolvedInstallLocation/jellyfin.zip" -Force
 }
