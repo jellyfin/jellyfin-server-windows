@@ -136,7 +136,8 @@ public class TrayApplicationContext : ApplicationContext
 
         contextMenu.Opening += new CancelEventHandler(ContextMenuOnPopup);
         using var iconStream = Assembly.GetExecutingAssembly().GetManifestResourceStream(TrayIconResourceName);
-        _trayIcon = new NotifyIcon() { Icon = new Icon(iconStream), ContextMenuStrip = contextMenu, Visible = true };
+        _trayIcon = new NotifyIcon() { Icon = new Icon(iconStream), ContextMenuStrip = contextMenu, Visible = true, Text = "Jellyfin" };
+        _trayIcon.DoubleClick += Open;
     }
 
     private void LoadJellyfinConfig()
