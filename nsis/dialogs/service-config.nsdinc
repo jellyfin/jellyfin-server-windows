@@ -35,7 +35,7 @@ Function fnc_service_config_Create
   ${NSD_Check} $hCtl_service_config_StartServiceAfterInstall
   
   ; === LocalSystemAccountLabel (type: Label) ===
-  ${NSD_CreateLabel} 8u 71u 280u 28u "The Local System account has full access to every resource and file on the system. This can have very real security implications. Do not use unless absolutely neseccary."
+  ${NSD_CreateLabel} 8u 71u 280u 28u "The Local System account has full access to every resource and file on the system. This can have very real security implications. Do not use unless absolutely necessary."
   Pop $hCtl_service_config_LocalSystemAccountLabel
   
   ; === NetworkServiceAccountLabel (type: Label) ===
