@@ -14,7 +14,11 @@ namespace Jellyfin.Windows.Tray
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
 
-            Application.Run(new TrayApplicationContext());
+            var trayApplicationContext = new TrayApplicationContext();
+            if (trayApplicationContext.InitApplication())
+            {
+                Application.Run(trayApplicationContext);
+            }
         }
     }
 }

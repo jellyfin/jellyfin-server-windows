@@ -49,12 +49,40 @@ public class TrayApplicationContext : ApplicationContext
     public TrayApplicationContext()
     {
         _serviceController = ServiceController.GetServices().FirstOrDefault(s => s.ServiceName == _jellyfinServiceName);
-        RegistryKey registryKey = Registry.LocalMachine.OpenSubKey("Software\\WOW6432Node\\Jellyfin\\Server");
         if (_serviceController != null)
         {
             _runType = RunType.Service;
         }
+    }
 
+    private bool AutoStart
+    {
+        get
+        {
+            using RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+            return key.GetValue(_autostartKey) != null;
+        }
+
+        set
+        {
+            using RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
+            if (value && key.GetValue(_autostartKey) == null)
+            {
+                key.SetValue(_autostartKey, Path.ChangeExtension(Application.ExecutablePath, "exe"));
+            }
+            else if (!value && key.GetValue(_autostartKey) != null)
+            {
+                key.DeleteValue(_autostartKey);
+            }
+        }
+    }
+
+    /// <summary>
+    ///     Setups and Starts the application.
+    /// </summary>
+    /// <returns>boolean value if the application should start rendering its UI.</returns>
+    public bool InitApplication()
+    {
         if (_serviceController == null)
         {
             try
@@ -64,8 +92,7 @@ public class TrayApplicationContext : ApplicationContext
             catch (Exception ex)
             {
                 MessageBox.Show("Error: " + ex.Message + "\r\nCouldn't find Jellyfin Installation. The application will now close.");
-                Application.Exit();
-                return;
+                return false;
             }
 
             _runType = RunType.Executable;
@@ -91,28 +118,8 @@ public class TrayApplicationContext : ApplicationContext
                 Start(null, null);
             }
         }
-    }
 
-    private bool AutoStart
-    {
-        get
-        {
-            using RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
-            return key.GetValue(_autostartKey) != null;
-        }
-
-        set
-        {
-            using RegistryKey key = Registry.CurrentUser.OpenSubKey("SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", true);
-            if (value && key.GetValue(_autostartKey) == null)
-            {
-                key.SetValue(_autostartKey, Path.ChangeExtension(Application.ExecutablePath, "exe"));
-            }
-            else if (!value && key.GetValue(_autostartKey) != null)
-            {
-                key.DeleteValue(_autostartKey);
-            }
-        }
+        return true;
     }
 
     private void CreateTrayIcon()
