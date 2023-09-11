@@ -16,7 +16,7 @@ namespace Jellyfin.Windows.Tray
         {
             if (IsAlreadyRunning())
             {
-                MessageBox.Show("Jellyfin tray application is already running", "Warning", new MessageBoxButtons { }, MessageBoxIcon.Warning);
+                MessageBox.Show("The Jellyfin tray application is already running.", "Info", new MessageBoxButtons { }, MessageBoxIcon.Information);
                 Environment.Exit(1);
             }
 
