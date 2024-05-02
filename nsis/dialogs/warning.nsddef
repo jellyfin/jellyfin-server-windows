@@ -1,11 +1,11 @@
 ﻿<?xml version="1.0" encoding="UTF-8"?>
 <!--
-This file was created by NSISDialogDesigner 1.5.0.0
+This file was created by NSISDialogDesigner 1.6.0.0
 https://coolsoft.altervista.org/nsisdialogdesigner
 Do not edit manually!
 -->
-<Dialog Name="warning" Title="Dialog title..." Subtitle="Dialog subtitle...">
-  <Label Name="Label3" Location="15, 98" Size="380, 37" Text="Do not choose any folder that contains other data or media. Upon uninstall, they will be erased." Font="Microsoft Sans Serif, 10pt, style=Bold" ForeColor="Red" TabIndex="0" />
+<Dialog Name="warning" Title="Folder Location" Subtitle="A note concerning Install and Data folder paths.">
+  <Label Name="Label3" Location="15, 98" Size="384, 22" Text="Do not choose any folder that contains other data or media." Font="Microsoft Sans Serif, 9pt, style=Bold" ForeColor="Red" TabIndex="0" />
   <Label Name="Label2" Location="15, 54" Size="423, 35" Text="When choosing an install directory and data directory, it is recommended to leave them at their default paths." TabIndex="1" />
-  <Label Name="Label1" Location="12, 9" Text="Folder Warning" Font="Microsoft Sans Serif, 8.25pt, style=Bold" TabIndex="2" />
+  <Label Name="Label1" Location="12, 9" Text="Folder Location" Font="Microsoft Sans Serif, 8.25pt, style=Bold" TabIndex="2" />
 </Dialog>

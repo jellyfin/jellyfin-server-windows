@@ -1,14 +1,24 @@
 !verbose 3
-SetCompressor /SOLID bzip2
+;SetCompressor /SOLID bzip2 TODO ENABLE FOR RELEASE
 ShowInstDetails show
 ShowUninstDetails show
 Unicode True
 
 !define SF_USELECTED  0 ; used to check selected options status, rest are inherited from Sections.nsh
+!define INSTDIR_REG_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\JellyfinServer" ;Registry to show up in Add/Remove Programs
+!define INSTDIR_REG_ROOT "HKLM" ;Define root hive to use
 
 !include "MUI2.nsh"
 !include "Sections.nsh"
 !include "LogicLib.nsh"
+!addplugindir "plugins"
+;!include "helpers\UnInst.nsh" TODO TAKE OUT THESE TWO INCLUDES
+;!include "helpers\nsProcess.nsh"
+!include "helpers\FindProcess.nsh"
+
+
+;Define uninstall list name (optimal) TODO TAKE OUT THESE TWO  LINES
+;!define UninstName "Uninstall"
 
 !include "helpers\ShowError.nsh"
 
@@ -43,7 +53,7 @@ Unicode True
 
 ;--------------------------------
 
-!define REG_UNINST_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\JellyfinServer" ;Registry to show up in Add/Remove Programs
+
 !define REG_CONFIG_KEY "Software\Jellyfin\Server" ;Registry to store all configuration
 
 !getdllversion "$%InstallLocation%\jellyfin.dll" ver_ ;Align installer version with jellyfin.dll version
@@ -57,7 +67,7 @@ VIProductVersion "${ver_1}.${ver_2}.${ver_3}.0" ; VIProductVersion format, shoul
 VIFileVersion "${ver_1}.${ver_2}.${ver_3}.0" ; VIFileVersion format, should be X.X.X.X
 VIAddVersionKey "ProductName" "Jellyfin Server"
 VIAddVersionKey "FileVersion" "${ver_1}.${ver_2}.${ver_3}.0"
-VIAddVersionKey "LegalCopyright" "(c) 2019 Jellyfin Contributors. Code released under the GNU General Public License"
+VIAddVersionKey "LegalCopyright" "(c) 2024 Jellyfin Contributors. Code released under the GNU General Public License."
 VIAddVersionKey "FileDescription" "Jellyfin Server: The Free Software Media System"
 
 ;TODO, check defaults
@@ -96,15 +106,21 @@ CRCCheck on ; make sure the installer wasn't corrupted while downloading
 ; Components Page
     !define MUI_PAGE_CUSTOMFUNCTION_PRE HideComponentsPage
     !insertmacro MUI_PAGE_COMPONENTS
+
+; Folder Warning Page
+    Page custom ShowFolderWarningPage
+
+; Install folder page
     !define MUI_PAGE_CUSTOMFUNCTION_PRE HideInstallDirectoryPage ; Controls when to hide / show
     !define MUI_DIRECTORYPAGE_TEXT_DESTINATION "Install folder" ; shows just above the folder selection dialog
+    !define MUI_DIRECTORYPAGE_TEXT_TOP "Setup will install Jellyfin in the following folder.$\nTo install in a different folder, click Browse and select another folder."
     !insertmacro MUI_PAGE_DIRECTORY
 
 ; Data folder Page
     !define MUI_PAGE_CUSTOMFUNCTION_PRE HideDataDirectoryPage ; Controls when to hide / show
     !define MUI_PAGE_HEADER_TEXT "Choose Data Location"
     !define MUI_PAGE_HEADER_SUBTEXT "Choose the folder in which to install the Jellyfin Server data."
-    !define MUI_DIRECTORYPAGE_TEXT_TOP "The installer will set the following folder for Jellyfin Server data. To install in a different folder, click Browse and select another folder. Please make sure the folder exists and is accessible. Do not choose the server install folder. Click Next to continue."
+    !define MUI_DIRECTORYPAGE_TEXT_TOP "Setup will set the following folder for Jellyfin Server data. To install in a different folder, click Browse and select another folder.$\nPlease make sure the folder exists and is accessible.$\nDo not choose the server install folder."
     !define MUI_DIRECTORYPAGE_TEXT_DESTINATION "Data folder"
     !define MUI_DIRECTORYPAGE_VARIABLE $_JELLYFINDATADIR_
     !insertmacro MUI_PAGE_DIRECTORY
@@ -113,6 +129,7 @@ CRCCheck on ; make sure the installer wasn't corrupted while downloading
     !include "dialogs\setuptype.nsdinc"
     !include "dialogs\service-config.nsdinc"
     !include "dialogs\confirmation.nsdinc"
+    !include "dialogs\warning.nsdinc"
 
 ; Select service account type
     #!define MUI_PAGE_CUSTOMFUNCTION_PRE HideServiceConfigPage ; Controls when to hide / show (This does not work for Page, might need to go PageEx)
@@ -166,8 +183,17 @@ Section "!Jellyfin Server (required)" InstallJellyfinServer
 
     SetOutPath "$INSTDIR"
 
+    ; ;Create an exclusion list
+    ; !insertmacro UNINSTALLER_DATA_BEGIN
+
     File "/oname=icon.ico" "${UXPATH}\branding\NSIS\modern-install.ico"
     File /r $%InstallLocation%\*
+
+    ; ;Change uninstall list name (optimal)
+    ; !insertmacro UNINST_NAME "unins000"
+
+    ; ;Store uninstaller data
+    ; !insertmacro UNINSTALLER_DATA_END
 
     ; Write the InstallFolder, DataFolder, Network Service info into the registry for later use
     WriteRegExpandStr HKLM "${REG_CONFIG_KEY}" "InstallFolder" "$INSTDIR"
@@ -178,14 +204,14 @@ Section "!Jellyfin Server (required)" InstallJellyfinServer
     StrCpy $_JELLYFINVERSION_ "${ver_1}.${ver_2}.${ver_3}" ;
 
     ; Write the uninstall keys for Windows
-    WriteRegStr HKLM "${REG_UNINST_KEY}" "DisplayName" "Jellyfin Server $_JELLYFINVERSION_ ${NAMESUFFIX}"
-    WriteRegExpandStr HKLM "${REG_UNINST_KEY}" "UninstallString" '"$INSTDIR\Uninstall.exe"'
-    WriteRegStr HKLM "${REG_UNINST_KEY}" "DisplayIcon" '"$INSTDIR\Uninstall.exe",0'
-    WriteRegStr HKLM "${REG_UNINST_KEY}" "Publisher" "The Jellyfin Project"
-    WriteRegStr HKLM "${REG_UNINST_KEY}" "URLInfoAbout" "https://jellyfin.org/"
-    WriteRegStr HKLM "${REG_UNINST_KEY}" "DisplayVersion" "$_JELLYFINVERSION_"
-    WriteRegDWORD HKLM "${REG_UNINST_KEY}" "NoModify" 1
-    WriteRegDWORD HKLM "${REG_UNINST_KEY}" "NoRepair" 1
+    WriteRegStr HKLM "${INSTDIR_REG_KEY}" "DisplayName" "Jellyfin Server $_JELLYFINVERSION_ ${NAMESUFFIX}"
+    WriteRegExpandStr HKLM "${INSTDIR_REG_KEY}" "UninstallString" '"$INSTDIR\Uninstall.exe"'
+    WriteRegStr HKLM "${INSTDIR_REG_KEY}" "DisplayIcon" '"$INSTDIR\Uninstall.exe",0'
+    WriteRegStr HKLM "${INSTDIR_REG_KEY}" "Publisher" "The Jellyfin Project"
+    WriteRegStr HKLM "${INSTDIR_REG_KEY}" "URLInfoAbout" "https://jellyfin.org/"
+    WriteRegStr HKLM "${INSTDIR_REG_KEY}" "DisplayVersion" "$_JELLYFINVERSION_"
+    WriteRegDWORD HKLM "${INSTDIR_REG_KEY}" "NoModify" 1
+    WriteRegDWORD HKLM "${INSTDIR_REG_KEY}" "NoRepair" 1
 
     ; Create uninstaller
     WriteUninstaller "$INSTDIR\Uninstall.exe"
@@ -302,6 +328,8 @@ SectionEnd
 ;Uninstaller Section
 
 Section "Uninstall"
+    ;!define UNINST_TERMINATE TODO TAKE OUT
+
     ReadRegStr $INSTDIR HKLM "${REG_CONFIG_KEY}" "InstallFolder"  ; read the installation folder
     ReadRegStr $_JELLYFINDATADIR_ HKLM "${REG_CONFIG_KEY}" "DataFolder"  ; read the data folder
     ReadRegStr $_SERVICEACCOUNTTYPE_ HKLM "${REG_CONFIG_KEY}" "ServiceAccountType"  ; read the account name
@@ -309,7 +337,10 @@ Section "Uninstall"
     DetailPrint "Jellyfin Install location: $INSTDIR"
     DetailPrint "Jellyfin Data folder: $_JELLYFINDATADIR_"
 
-    MessageBox MB_YESNO|MB_ICONINFORMATION "Do you want to retain the Jellyfin Server data folder? The media will not be touched. $\r$\nIf unsure choose YES." /SD IDYES IDYES PreserveData
+    MessageBox MB_YESNO|MB_ICONINFORMATION "Do you want to keep the Jellyfin Server data folder? $\r$\nIf unsure choose YES." /SD IDYES IDYES PreserveData IDNO DeleteConfirmation
+
+    DeleteConfirmation:
+    MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION "Are you sure? Everything in $\r$\n$_JELLYFINDATADIR_ $\r$\nwill be deleted. $\r$\nIf you are sure, press OK." IDCANCEL PreserveData
 
     RMDir /r /REBOOTOK "$_JELLYFINDATADIR_"
 
@@ -345,13 +376,10 @@ Section "Uninstall"
             DetailPrint "Removed old shortcuts..."
         ${EndIf}
 
-    Delete "$INSTDIR\*.*"
-    RMDir /r /REBOOTOK "$INSTDIR\jellyfin-web"
-    Delete "$INSTDIR\Uninstall.exe"
-    RMDir /r /REBOOTOK "$INSTDIR"
+    ;!insertmacro UNINST_DELETE "$INSTDIR" "${UninstName}" TAKE OUT TODO
 
     DeleteRegKey HKLM "Software\Jellyfin"
-    DeleteRegKey HKLM "${REG_UNINST_KEY}"
+    DeleteRegKey HKLM "${INSTDIR_REG_KEY}"
 SectionEnd
 
 Function .onInit
@@ -366,11 +394,26 @@ Function .onInit
     SetShellVarContext current
     StrCpy $_JELLYFINDATADIR_ "$%ProgramData%\Jellyfin\Server"
 
-    System::Call 'kernel32::CreateMutex(p 0, i 0, t "JellyfinServerMutex") p .r1 ?e'
-    Pop $R0
+    ;System::Call 'kernel32::CreateMutex(p 0, i 0, t "JellyfinServerMutex") p .r1 ?e'
+    ;Pop $R0
 
-    StrCmp $R0 0 +3
-    !insertmacro ShowErrorFinal "The installer is already running."
+    ;StrCmp $R0 0 +3
+    ;!insertmacro ShowErrorFinal "The installer is already running."
+
+
+    ${FindProcess} "jellyfin.exe" $0
+    ${If} $0 <> 0
+        MessageBox MB_OK|MB_ICONEXCLAMATION "Jellyfin is running. Please close it first." /SD IDOK
+        Abort
+    ${EndIf}
+
+    ; StrCpy $1 "jellyfin.exe"
+    ; nsProcess::_FindProcess "$1"
+    ; Pop $R1
+    ; ${If} $R1 = 0
+    ;   MessageBox MB_OK|MB_ICONEXCLAMATION "Jellyfin is running. Please close it first." /SD IDOK
+    ; Abort
+    ; ${EndIf}
 
 ;Detect if Jellyfin is already installed.
 ; In case it is installed, let the user choose either
@@ -430,6 +473,12 @@ Function .onInit
     NoExisitingInstall: ; by this time, the variables have been correctly set to reflect previous install details
 FunctionEnd
 
+Function HideFolderWarningPage
+    ${If} $_EXISTINGINSTALLATION_ == "Yes" ; Existing installation detected, so don't warn for folder directories
+        Abort
+    ${EndIf}
+FunctionEnd
+
 Function HideInstallDirectoryPage
     ${If} $_EXISTINGINSTALLATION_ == "Yes" ; Existing installation detected, so don't ask for InstallFolder
         Abort
@@ -437,7 +486,7 @@ Function HideInstallDirectoryPage
 FunctionEnd
 
 Function HideDataDirectoryPage
-    ${If} $_EXISTINGINSTALLATION_ == "Yes" ; Existing installation detected, so don't ask for InstallFolder
+    ${If} $_EXISTINGINSTALLATION_ == "Yes" ; Existing installation detected, so don't ask for DataFolder
         Abort
     ${EndIf}
 FunctionEnd
@@ -470,8 +519,13 @@ FunctionEnd
 ; Setup Type dialog show function
 Function ShowSetupTypePage
   Call HideSetupTypePage
-  Call fnc_setuptype_Create
-  nsDialogs::Show
+  Call fnc_setuptype_Show
+FunctionEnd
+
+; Folder Warning dialog show function
+Function ShowFolderWarningPage
+  Call HideFolderWarningPage
+  Call fnc_warning_Show
 FunctionEnd
 
 ; Service Config dialog show function
@@ -567,5 +621,5 @@ Function .onSelChange
 FunctionEnd
 
 Function .onInstSuccess
-    #ExecShell "open" "http://localhost:8096"
+    #ExecShell "open" "http://localhost:8096" TODO MAKE THIS HAPPEN IF FIRST INSTALL
 FunctionEnd
