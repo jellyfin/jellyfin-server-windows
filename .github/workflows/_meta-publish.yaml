@@ -27,14 +27,14 @@ jobs:
         run: |
           Invoke-WebRequest '${{ inputs.server_url }}' -OutFile 'jellyfin.zip'
           Expand-Archive 'jellyfin.zip'
-          Copy-Item ".\Support Files\LICENSE" -Destination $(Resolve-Path .\jellyfin\jellyfin_*)
+          Copy-Item ".\Support Files\LICENSE" -Destination $(Resolve-Path .\jellyfin\jellyfin)
 
       - name: Publish Tray
-        run: dotnet publish -c Release -r win-x64 --no-self-contained --output $(Resolve-Path .\jellyfin\jellyfin_*)
+        run: dotnet publish -c Release -r win-x64 --no-self-contained --output $(Resolve-Path .\jellyfin\jellyfin)
 
       - name: Build installer
         run: |
-          $env:InstallLocation = $(Resolve-Path .\jellyfin\jellyfin_*)
+          $env:InstallLocation = $(Resolve-Path .\jellyfin\jellyfin)
           makensis /Dx64 /DUXPATH=$(Resolve-Path .\jellyfin-ux) $(Join-Path -Path $(Resolve-Path .\nsis) -ChildPath jellyfin.nsi)
 
       - name: Rename Installer
