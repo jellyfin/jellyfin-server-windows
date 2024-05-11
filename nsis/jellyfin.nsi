@@ -311,7 +311,7 @@ Section "Uninstall"
     MessageBox MB_YESNO|MB_ICONINFORMATION "Do you want to keep the Jellyfin Server data folder? $\r$\nIf unsure choose YES." /SD IDYES IDYES PreserveData IDNO DeleteConfirmation
 
     DeleteConfirmation:
-    MessageBox MB_YESNOCANCEL|MB_ICONEXCLAMATION "Are you sure? Everything in $\r$\n$_JELLYFINDATADIR_ $\r$\nwill be deleted. $\r$\nIf you are sure, press YES." IDYES DeleteData IDNO PreserveData IDCANCEL StopNow
+    MessageBox MB_YESNOCANCEL|MB_ICONEXCLAMATION "Are you sure? Everything in $\r$\n$_JELLYFINDATADIR_ $\r$\nwill be deleted. $\r$\nIf you are sure, press YES." IDYES DeleteData IDNO PreserveData ;IDCANCEL StopNow
 
     DeleteData:
     ; Try to delete only known data dir folders
