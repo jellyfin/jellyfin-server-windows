@@ -1,5 +1,5 @@
 !verbose 3
-;SetCompressor /SOLID bzip2 TODO ENABLE FOR RELEASE
+;SetCompressor /SOLID bzip2 TODO Review if this is best option
 ShowInstDetails show
 ShowUninstDetails show
 Unicode True
@@ -162,17 +162,10 @@ Section "!Jellyfin Server (required)" InstallJellyfinServer
 
     SetOutPath "$INSTDIR"
 
-    ; ;Create an exclusion list
-    ; !insertmacro UNINSTALLER_DATA_BEGIN
 
     File "/oname=icon.ico" "${UXPATH}\branding\NSIS\modern-install.ico"
     File /r $%InstallLocation%\*
 
-    ; ;Change uninstall list name (optimal)
-    ; !insertmacro UNINST_NAME "unins000"
-
-    ; ;Store uninstaller data
-    ; !insertmacro UNINSTALLER_DATA_END
 
     ; Write the InstallFolder, DataFolder, Network Service info into the registry for later use
     WriteRegExpandStr HKLM "${REG_CONFIG_KEY}" "InstallFolder" "$INSTDIR"
@@ -318,11 +311,25 @@ Section "Uninstall"
     MessageBox MB_YESNO|MB_ICONINFORMATION "Do you want to keep the Jellyfin Server data folder? $\r$\nIf unsure choose YES." /SD IDYES IDYES PreserveData IDNO DeleteConfirmation
 
     DeleteConfirmation:
-    MessageBox MB_OKCANCEL|MB_ICONEXCLAMATION "Are you sure? Everything in $\r$\n$_JELLYFINDATADIR_ $\r$\nwill be deleted. $\r$\nIf you are sure, press OK." IDCANCEL PreserveData
+    MessageBox MB_YESNOCANCEL|MB_ICONEXCLAMATION "Are you sure? Everything in $\r$\n$_JELLYFINDATADIR_ $\r$\nwill be deleted. $\r$\nIf you are sure, press YES." IDYES DeleteData IDNO PreserveData IDCANCEL StopNow
 
-    RMDir /r /REBOOTOK "$_JELLYFINDATADIR_"
+    DeleteData:
+    ; Try to delete only known data dir folders
+    RMDir /r /REBOOTOK "$_JELLYFINDATADIR_\cache"
+    RMDir /r /REBOOTOK "$_JELLYFINDATADIR_\config"
+    RMDir /r /REBOOTOK "$_JELLYFINDATADIR_\data"
+    RMDir /r /REBOOTOK "$_JELLYFINDATADIR_\log"
+    RMDir /r /REBOOTOK "$_JELLYFINDATADIR_\metadata"
+    RMDir /r /REBOOTOK "$_JELLYFINDATADIR_\plugins"
+    RMDir /r /REBOOTOK "$_JELLYFINDATADIR_\root"
+    ; Delete final dir only if empty
+    RMDir /REBOOTOK "$_JELLYFINDATADIR_"
+
+    StopNow:
+    Abort
 
     PreserveData:
+    ; noop
 
     ExecWait "TaskKill /IM Jellyfin.Windows.Tray.exe /F"
     ExecWait '"$INSTDIR\nssm.exe" statuscode JellyfinServer' $0
@@ -370,20 +377,20 @@ Function .onInit
     SetShellVarContext current
     StrCpy $_JELLYFINDATADIR_ "$%ProgramData%\Jellyfin\Server"
 
+    ; This blocks another installer from running at the same time
     System::Call 'kernel32::CreateMutex(p 0, i 0, t "JellyfinServerMutex") p .r1 ?e'
     Pop $R0
-
     StrCmp $R0 0 +3
     !insertmacro ShowErrorFinal "The installer is already running."
 
 
+    ; This stops the installer from starting if jellyfin.exe is open
     StrCpy $1 "jellyfin.exe"
     nsProcess::_FindProcess "$1"
     Pop $R1
     ${If} $R1 = 0
        !insertmacro ShowErrorFinal "Jellyfin is running. Please close it first."
-      ;MessageBox MB_OK|MB_ICONEXCLAMATION "Jellyfin is running. Please close it first." /SD IDOK
-    Abort
+        Abort
     ${EndIf}
 
 ;Detect if Jellyfin is already installed.
@@ -592,5 +599,5 @@ Function .onSelChange
 FunctionEnd
 
 Function .onInstSuccess
-    #ExecShell "open" "http://localhost:8096" TODO MAKE THIS HAPPEN IF FIRST INSTALL
+    ; TODO - Eventually add an option to launch tray app or service instead, and remind/offer to start browser
 FunctionEnd
