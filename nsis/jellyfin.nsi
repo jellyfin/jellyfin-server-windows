@@ -7,19 +7,13 @@ Unicode True
 !define SF_USELECTED  0 ; used to check selected options status, rest are inherited from Sections.nsh
 !define INSTDIR_REG_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\JellyfinServer" ;Registry to show up in Add/Remove Programs
 !define INSTDIR_REG_ROOT "HKLM" ;Define root hive to use
+!define INSTALL_DIRECTORY "$PROGRAMFILES64\Jellyfin\Server"
 
 !include "MUI2.nsh"
 !include "Sections.nsh"
 !include "LogicLib.nsh"
 !addplugindir "plugins"
-;!include "helpers\UnInst.nsh" TODO TAKE OUT THESE TWO INCLUDES
-;!include "helpers\nsProcess.nsh"
-!include "helpers\FindProcess.nsh"
-
-
-;Define uninstall list name (optimal) TODO TAKE OUT THESE TWO  LINES
-;!define UninstName "Uninstall"
-
+!include "helpers\nsProcess.nsh"
 !include "helpers\ShowError.nsh"
 
 ; Global variables that we'll use
@@ -33,23 +27,8 @@ Unicode True
     Var _EXISTINGSERVICE_
     Var _MAKESHORTCUTS_
     Var _FOLDEREXISTS_
-;
 
-!ifdef x64
-    !define ARCH "x64"
-    !define NAMESUFFIX "(64 bit)"
-    !define INSTALL_DIRECTORY "$PROGRAMFILES64\Jellyfin\Server"
-!endif
 
-!ifdef x84
-    !define ARCH "x86"
-    !define NAMESUFFIX "(32 bit)"
-    !define INSTALL_DIRECTORY "$PROGRAMFILES32\Jellyfin\Server"
-!endif
-
-!ifndef ARCH
-    !error "Set the Arch with /Dx86 or /Dx64"
-!endif
 
 ;--------------------------------
 
@@ -58,8 +37,8 @@ Unicode True
 
 !getdllversion "$%InstallLocation%\jellyfin.dll" ver_ ;Align installer version with jellyfin.dll version
 
-Name "Jellyfin Server ${ver_1}.${ver_2}.${ver_3} ${NAMESUFFIX}" ; This is referred in various header text labels
-OutFile "jellyfin_${ver_1}.${ver_2}.${ver_3}_windows-${ARCH}.exe" ; Naming convention jellyfin_{version}_windows-{arch].exe
+Name "Jellyfin Server ${ver_1}.${ver_2}.${ver_3}" ; This is referred in various header text labels
+OutFile "jellyfin_${ver_1}.${ver_2}.${ver_3}_windows-x64.exe" ; Naming convention jellyfin_{version}_windows-x64.exe
 BrandingText "Jellyfin Server ${ver_1}.${ver_2}.${ver_3} Installer" ; This shows in just over the buttons
 
 ; installer attributes, these show up in details tab on installer properties
@@ -113,14 +92,14 @@ CRCCheck on ; make sure the installer wasn't corrupted while downloading
 ; Install folder page
     !define MUI_PAGE_CUSTOMFUNCTION_PRE HideInstallDirectoryPage ; Controls when to hide / show
     !define MUI_DIRECTORYPAGE_TEXT_DESTINATION "Install folder" ; shows just above the folder selection dialog
-    !define MUI_DIRECTORYPAGE_TEXT_TOP "Setup will install Jellyfin in the following folder.$\nTo install in a different folder, click Browse and select another folder."
+    !define MUI_DIRECTORYPAGE_TEXT_TOP "Setup will install Jellyfin in the following folder."
     !insertmacro MUI_PAGE_DIRECTORY
 
 ; Data folder Page
     !define MUI_PAGE_CUSTOMFUNCTION_PRE HideDataDirectoryPage ; Controls when to hide / show
     !define MUI_PAGE_HEADER_TEXT "Choose Data Location"
     !define MUI_PAGE_HEADER_SUBTEXT "Choose the folder in which to install the Jellyfin Server data."
-    !define MUI_DIRECTORYPAGE_TEXT_TOP "Setup will set the following folder for Jellyfin Server data. To install in a different folder, click Browse and select another folder.$\nPlease make sure the folder exists and is accessible.$\nDo not choose the server install folder."
+    !define MUI_DIRECTORYPAGE_TEXT_TOP "Setup will set the following folder for Jellyfin Server data.$\nDo not choose the server install folder."
     !define MUI_DIRECTORYPAGE_TEXT_DESTINATION "Data folder"
     !define MUI_DIRECTORYPAGE_VARIABLE $_JELLYFINDATADIR_
     !insertmacro MUI_PAGE_DIRECTORY
@@ -204,7 +183,7 @@ Section "!Jellyfin Server (required)" InstallJellyfinServer
     StrCpy $_JELLYFINVERSION_ "${ver_1}.${ver_2}.${ver_3}" ;
 
     ; Write the uninstall keys for Windows
-    WriteRegStr HKLM "${INSTDIR_REG_KEY}" "DisplayName" "Jellyfin Server $_JELLYFINVERSION_ ${NAMESUFFIX}"
+    WriteRegStr HKLM "${INSTDIR_REG_KEY}" "DisplayName" "Jellyfin Server $_JELLYFINVERSION_"
     WriteRegExpandStr HKLM "${INSTDIR_REG_KEY}" "UninstallString" '"$INSTDIR\Uninstall.exe"'
     WriteRegStr HKLM "${INSTDIR_REG_KEY}" "DisplayIcon" '"$INSTDIR\Uninstall.exe",0'
     WriteRegStr HKLM "${INSTDIR_REG_KEY}" "Publisher" "The Jellyfin Project"
@@ -328,7 +307,6 @@ SectionEnd
 ;Uninstaller Section
 
 Section "Uninstall"
-    ;!define UNINST_TERMINATE TODO TAKE OUT
 
     ReadRegStr $INSTDIR HKLM "${REG_CONFIG_KEY}" "InstallFolder"  ; read the installation folder
     ReadRegStr $_JELLYFINDATADIR_ HKLM "${REG_CONFIG_KEY}" "DataFolder"  ; read the data folder
@@ -376,8 +354,6 @@ Section "Uninstall"
             DetailPrint "Removed old shortcuts..."
         ${EndIf}
 
-    ;!insertmacro UNINST_DELETE "$INSTDIR" "${UninstName}" TAKE OUT TODO
-
     DeleteRegKey HKLM "Software\Jellyfin"
     DeleteRegKey HKLM "${INSTDIR_REG_KEY}"
 SectionEnd
@@ -394,26 +370,21 @@ Function .onInit
     SetShellVarContext current
     StrCpy $_JELLYFINDATADIR_ "$%ProgramData%\Jellyfin\Server"
 
-    ;System::Call 'kernel32::CreateMutex(p 0, i 0, t "JellyfinServerMutex") p .r1 ?e'
-    ;Pop $R0
+    System::Call 'kernel32::CreateMutex(p 0, i 0, t "JellyfinServerMutex") p .r1 ?e'
+    Pop $R0
 
-    ;StrCmp $R0 0 +3
-    ;!insertmacro ShowErrorFinal "The installer is already running."
+    StrCmp $R0 0 +3
+    !insertmacro ShowErrorFinal "The installer is already running."
 
 
-    ${FindProcess} "jellyfin.exe" $0
-    ${If} $0 <> 0
-        MessageBox MB_OK|MB_ICONEXCLAMATION "Jellyfin is running. Please close it first." /SD IDOK
-        Abort
+    StrCpy $1 "jellyfin.exe"
+    nsProcess::_FindProcess "$1"
+    Pop $R1
+    ${If} $R1 = 0
+       !insertmacro ShowErrorFinal "Jellyfin is running. Please close it first."
+      ;MessageBox MB_OK|MB_ICONEXCLAMATION "Jellyfin is running. Please close it first." /SD IDOK
+    Abort
     ${EndIf}
-
-    ; StrCpy $1 "jellyfin.exe"
-    ; nsProcess::_FindProcess "$1"
-    ; Pop $R1
-    ; ${If} $R1 = 0
-    ;   MessageBox MB_OK|MB_ICONEXCLAMATION "Jellyfin is running. Please close it first." /SD IDOK
-    ; Abort
-    ; ${EndIf}
 
 ;Detect if Jellyfin is already installed.
 ; In case it is installed, let the user choose either
