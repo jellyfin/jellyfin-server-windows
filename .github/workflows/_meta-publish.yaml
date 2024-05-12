@@ -28,6 +28,12 @@ jobs:
           Invoke-WebRequest '${{ inputs.server_url }}' -OutFile 'jellyfin.zip'
           Expand-Archive 'jellyfin.zip'
           Copy-Item ".\Support Files\LICENSE" -Destination $(Resolve-Path .\jellyfin\jellyfin)
+      
+      - name: Add NSSM
+        run: |
+          Invoke-WebRequest 'https://repo.jellyfin.org/releases/other/nssm.zip' -OutFile 'nssm.zip'
+          Expand-Archive 'nssm.zip'
+          Copy-Item "nssm.exe" -Destination $(Resolve-Path .\jellyfin\jellyfin)
 
       - name: Publish Tray
         run: dotnet publish -c Release -r win-x64 --no-self-contained --output $(Resolve-Path .\jellyfin\jellyfin)
