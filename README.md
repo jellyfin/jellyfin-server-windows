@@ -47,8 +47,9 @@ Do you want to build Jellyfin's tray app or installer for yourself? Read on!
 
 ### Steps
 1. Build using the dotnet command, or using Visual Studio/VS Code.
-    * On the command line, in the root of the cloned repository, execute this command: `dotnet build -c Release`
+    * On the command line, in the root of the cloned repository, execute this command: `dotnet build -c Release -f net472`
 2. From the resulting bin folder, collect `Jellyfin.Windows.Tray.exe` and all the DLLs within.
+3. For use with a Jellyfin install, place in its own directory, such as `jellyfin-windows-tray`.
 
 ### Usage
 The tray app is designed to do three things:
