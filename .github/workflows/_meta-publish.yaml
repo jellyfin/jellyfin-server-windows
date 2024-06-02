@@ -36,7 +36,9 @@ jobs:
           Copy-Item ".\nssm\nssm.exe" -Destination $(Resolve-Path .\jellyfin\jellyfin)
 
       - name: Publish Tray
-        run: dotnet publish -c Release -r win-x64 -f net472 --no-self-contained --output $(Resolve-Path .\jellyfin\jellyfin-windows-tray)
+        run: |
+          New-Item -Path .\jellyfin\jellyfin\jellyfin-windows-tray -ItemType Directory
+          dotnet publish -c Release -r win-x64 -f net472 --no-self-contained --output $(Resolve-Path .\jellyfin\jellyfin\jellyfin-windows-tray)
 
       - name: Build installer
         run: |
