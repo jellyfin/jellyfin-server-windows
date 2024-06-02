@@ -383,16 +383,6 @@ Function .onInit
     StrCmp $R0 0 +3
     !insertmacro ShowErrorFinal "The installer is already running."
 
-
-    ; This stops the installer from starting if jellyfin.exe is open
-    StrCpy $1 "jellyfin.exe"
-    nsProcess::_FindProcess "$1"
-    Pop $R1
-    ${If} $R1 = 0
-       !insertmacro ShowErrorFinal "Jellyfin is running. Please close it first."
-        Abort
-    ${EndIf}
-
 ;Detect if Jellyfin is already installed.
 ; In case it is installed, let the user choose either
 ;	1. Exit installer
@@ -434,6 +424,15 @@ Function .onInit
     SectionSetText ${CreateWinShortcuts} ""
 
     NoService: ; existing install was present but no service was detected
+        ; This stops the installer from starting if jellyfin.exe is open
+        StrCpy $1 "jellyfin.exe"
+        nsProcess::_FindProcess "$1"
+        Pop $R1
+        ${If} $R1 = 0
+        !insertmacro ShowErrorFinal "Jellyfin is running. Please close it first."
+            Abort
+        ${EndIf}
+
         ${If} $_SERVICEACCOUNTTYPE_ == "None"
             StrCpy $_SETUPTYPE_ "Basic"
             StrCpy $_INSTALLSERVICE_ "No"
