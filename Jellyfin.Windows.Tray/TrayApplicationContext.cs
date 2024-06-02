@@ -172,7 +172,7 @@ public class TrayApplicationContext : ApplicationContext
             XPathNavigator networkReader = networkXml.CreateNavigator();
 
             _networkAddress = networkReader.SelectSingleNode("/NetworkConfiguration/LocalNetworkAddresses").Value;
-            _port = networkReader.SelectSingleNode("/NetworkConfiguration/HttpServerPortNumber")?.Value;
+            _port = networkReader.SelectSingleNode("/NetworkConfiguration/InternalHTTPPort")?.Value;
             _baseUrl = networkReader.SelectSingleNode("/NetworkConfiguration/BaseUrl")?.Value;
         }
 
