@@ -138,7 +138,7 @@ CRCCheck on ; make sure the installer wasn't corrupted while downloading
 Section "!Jellyfin Server (required)" InstallJellyfinServer
     SectionIn RO ; Mandatory section, isn't this the whole purpose to run the installer.
 
-    StrCmp "$_EXISTINGINSTALLATION_" "Yes" RunUninstaller CarryOn ; Silently uninstall in case of previous installation
+    StrCmp "$_EXISTINGINSTALLATION_" "Yes" RunUninstaller ; Silently uninstall in case of previous installation
 
     RunUninstaller:
     DetailPrint "Looking for uninstaller at $INSTDIR"
@@ -150,15 +150,15 @@ Section "!Jellyfin Server (required)" InstallJellyfinServer
     ExecWait '"$INSTDIR\Uninstall.exe" /S _?=$INSTDIR' $0
     DetailPrint "Uninstall finished, $0"
 
-    CarryOn:
-    ${If} $_EXISTINGSERVICE_ == 'Yes'
-        ExecWait '"$INSTDIR\nssm.exe" stop JellyfinServer' $0
-        ${If} $0 <> 0
-            MessageBox MB_OK|MB_ICONSTOP "Could not stop the Jellyfin Server service."
-            Abort
-        ${EndIf}
-        DetailPrint "Stopped Jellyfin Server service, $0"
-    ${EndIf}
+    CarryOn: ; We should never hit this under normal circumstances. We should probably rewrite this
+        ; ${If} $_EXISTINGSERVICE_ == 'Yes'
+        ;     ExecWait '"$INSTDIR\nssm.exe" stop JellyfinServer' $0
+        ;     ${If} $0 <> 0
+        ;         MessageBox MB_OK|MB_ICONSTOP "Could not stop the Jellyfin Server service."
+        ;         Abort
+        ;     ${EndIf}
+        ;     DetailPrint "Stopped Jellyfin Server service, $0"
+        ; ${EndIf}
 
     SetOutPath "$INSTDIR"
 
@@ -322,11 +322,10 @@ Section "Uninstall"
     RMDir /r /REBOOTOK "$_JELLYFINDATADIR_\metadata"
     RMDir /r /REBOOTOK "$_JELLYFINDATADIR_\plugins"
     RMDir /r /REBOOTOK "$_JELLYFINDATADIR_\root"
-    ; Delete final dir only if empty
-    RMDir /REBOOTOK "$_JELLYFINDATADIR_"
+    RMDir /REBOOTOK "$_JELLYFINDATADIR_"     ; Delete final dir only if empty
 
-    StopNow:
-    Abort
+    ;StopNow:
+    ;    Abort
 
     PreserveData:
     ; noop
@@ -424,20 +423,19 @@ Function .onInit
     SectionSetText ${CreateWinShortcuts} ""
 
     NoService: ; existing install was present but no service was detected
-        ; This stops the installer from starting if jellyfin.exe is open
-        StrCpy $1 "jellyfin.exe"
-        nsProcess::_FindProcess "$1"
-        Pop $R1
-        ${If} $R1 = 0
-        !insertmacro ShowErrorFinal "Jellyfin is running. Please close it first."
-            Abort
-        ${EndIf}
-
         ${If} $_SERVICEACCOUNTTYPE_ == "None"
             StrCpy $_SETUPTYPE_ "Basic"
             StrCpy $_INSTALLSERVICE_ "No"
             StrCpy $_SERVICESTART_ "No"
             StrCpy $_MAKESHORTCUTS_ "Yes"
+            ; This stops the installer from starting if jellyfin.exe is open
+            StrCpy $3 "jellyfin.exe"
+            nsProcess::_FindProcess "$3"
+            Pop $R3
+            ${If} $R3 = 0
+                !insertmacro ShowErrorFinal "Jellyfin is running. Please close it first."
+                Abort
+            ${EndIf}
         ${EndIf}
 
     ; Let the user know that we'll upgrade and provide an option to quit
