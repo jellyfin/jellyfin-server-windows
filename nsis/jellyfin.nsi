@@ -221,7 +221,7 @@ ${If} $_INSTALLSERVICE_ == "Yes" ; Only run this if we're going to install the s
 
     Sleep 3000 ; Give time for Windows to catchup
     ConfigureStartRetry:
-    ExecWait '"$INSTDIR\nssm.exe" set JellyfinServer Start SERVICE_DELAYED_AUTO_START' $0
+    ExecWait '"$INSTDIR\nssm.exe" set JellyfinServer Start SERVICE_AUTO_START' $0
     ${If} $0 <> 0
         !insertmacro ShowError "Could not configure the Jellyfin Server service." ConfigureStartRetry
     ${EndIf}
