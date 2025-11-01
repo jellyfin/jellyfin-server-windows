@@ -132,6 +132,7 @@ public class TrayApplicationContext : ApplicationContext
         _menuItemExit = new ToolStripMenuItem("Exit", null, Exit);
 
         ContextMenuStrip contextMenu = new ContextMenuStrip();
+        contextMenu.ShowImageMargin = false;
         contextMenu.Items.Add(_menuItemAutostart);
         contextMenu.Items.Add(new ToolStripSeparator());
         contextMenu.Items.Add(_menuItemStart);
