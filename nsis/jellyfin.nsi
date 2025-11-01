@@ -3,6 +3,7 @@
 ShowInstDetails show
 ShowUninstDetails show
 Unicode True
+ManifestDPIAware true
 
 !define SF_USELECTED  0 ; used to check selected options status, rest are inherited from Sections.nsh
 !define INSTDIR_REG_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\JellyfinServer" ;Registry to show up in Add/Remove Programs
