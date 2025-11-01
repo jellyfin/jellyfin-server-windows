@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFramework>net9.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <ApplicationIcon>JellyfinIcon.ico</ApplicationIcon>
@@ -16,7 +16,6 @@
     <RepositoryUrl>https://github.com/jellyfin/jellyfin-server-windows</RepositoryUrl>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
-    <AnalysisMode>AllEnabledByDefault</AnalysisMode>
     <CodeAnalysisRuleSet>../jellyfin.ruleset</CodeAnalysisRuleSet>
     <NeutralLanguage>en-US</NeutralLanguage>
     <LangVersion>latest</LangVersion>
