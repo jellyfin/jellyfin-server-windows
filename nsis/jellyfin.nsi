@@ -47,7 +47,8 @@ VIProductVersion "${ver_1}.${ver_2}.${ver_3}.0" ; VIProductVersion format, shoul
 VIFileVersion "${ver_1}.${ver_2}.${ver_3}.0" ; VIFileVersion format, should be X.X.X.X
 VIAddVersionKey "ProductName" "Jellyfin Server"
 VIAddVersionKey "FileVersion" "${ver_1}.${ver_2}.${ver_3}.0"
-VIAddVersionKey "LegalCopyright" "(c) 2024 Jellyfin Contributors. Code released under the GNU General Public License."
+!define /date BUILD_YEAR "%Y"
+VIAddVersionKey "LegalCopyright" "(c) ${BUILD_YEAR} Jellyfin Contributors. Code released under the GNU General Public License."
 VIAddVersionKey "FileDescription" "Jellyfin Server: The Free Software Media System"
 
 ;TODO, check defaults
