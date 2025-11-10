@@ -15,10 +15,10 @@ jobs:
       DOTNET_CLI_TELEMETRY_OPTOUT: 1
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Clone UX Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: jellyfin/jellyfin-ux
           path: .\jellyfin-ux
