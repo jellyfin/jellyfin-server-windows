@@ -22,7 +22,6 @@ namespace Jellyfin.Windows.Tray
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
 
             var trayApplicationContext = new TrayApplicationContext();
             if (trayApplicationContext.InitApplication())
