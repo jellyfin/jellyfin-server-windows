@@ -21,6 +21,7 @@
     <NeutralLanguage>en-US</NeutralLanguage>
     <LangVersion>latest</LangVersion>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
   </PropertyGroup>
 
   <ItemGroup>
@@ -50,6 +51,10 @@
     <PackageReference Include="SmartAnalyzers.MultithreadingAnalyzer" Version="1.1.31" PrivateAssets="All" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Include="app.manifest" />
+  </ItemGroup>
+  
   <ItemGroup>
     <None Update="Resources\AppIcon.png">
       <CopyToOutputDirectory>Never</CopyToOutputDirectory>

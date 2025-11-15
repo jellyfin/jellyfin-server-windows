@@ -38,7 +38,7 @@ jobs:
       - name: Publish Tray
         run: |
           New-Item -Path .\jellyfin\jellyfin\jellyfin-windows-tray -ItemType Directory
-          dotnet publish -c Release -r win-x64 -f net472 --no-self-contained --output $(Resolve-Path .\jellyfin\jellyfin\jellyfin-windows-tray)
+          dotnet publish -c Release -r win-x64 --output $(Resolve-Path .\jellyfin\jellyfin\jellyfin-windows-tray)
 
       - name: Build installer
         run: |
