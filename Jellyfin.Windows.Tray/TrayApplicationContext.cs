@@ -133,6 +133,7 @@ public class TrayApplicationContext : ApplicationContext
 
         ContextMenuStrip contextMenu = new ContextMenuStrip();
         contextMenu.ShowImageMargin = false;
+        contextMenu.ShowCheckMargin = true;
         contextMenu.Items.Add(_menuItemAutostart);
         contextMenu.Items.Add(new ToolStripSeparator());
         contextMenu.Items.Add(_menuItemStart);
