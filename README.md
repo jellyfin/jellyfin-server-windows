@@ -40,6 +40,30 @@ Do you want to build Jellyfin's tray app or installer for yourself? Read on!
 
 ---
 
+## Upgrading an existing install
+Running the installer again over an existing install upgrades it in place: your
+data folder (databases, config, plugins, logs) is never touched, and the server
+is restarted when the upgrade finishes. No uninstall step is needed.
+
+If the installer finds a **running** Jellyfin Server that it did not install
+(portable copies, folders that were moved, or servers started by a scheduled
+task with a custom `--datadir`), it now offers to upgrade *that* installation
+in place instead of creating a second one beside it. The detected install
+folder and data folder are reused, the server is restarted with the same
+command line it was running with, and the registry is written so all *future*
+upgrades work exactly like a normal install.
+
+For unattended/headless upgrades, the same flow runs with no prompts:
+
+```
+jellyfin_10.9.0_windows-x64.exe /S
+```
+
+A detected unregistered install is adopted silently (default answer: upgrade in
+place). Cancel/`Exit` behavior is unchanged for registered installs.
+
+---
+
 ## Compiling the Tray App
 ### Requirements
 * [.NET 6.0 SDK](https://dotnet.microsoft.com/download)

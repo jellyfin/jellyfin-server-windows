@@ -16,6 +16,7 @@ ManifestDPIAware true
 !addplugindir "plugins"
 !include "helpers\nsProcess.nsh"
 !include "helpers\ShowError.nsh"
+!include "helpers\FindCustomInstall.nsh"
 
 ; Global variables that we'll use
     Var _JELLYFINVERSION_
@@ -140,6 +141,14 @@ CRCCheck on ; make sure the installer wasn't corrupted while downloading
 Section "!Jellyfin Server (required)" InstallJellyfinServer
     SectionIn RO ; Mandatory section, isn't this the whole purpose to run the installer.
 
+    ; When adopting an unregistered running server, stop it first or the files
+    ; we are about to copy are locked by the live process.
+    ${If} $_CUSTOMADOPTED_ == "Yes"
+        DetailPrint "Stopping the running Jellyfin Server before upgrading in place"
+        ExecWait 'TaskKill /F /IM jellyfin.exe' $0
+        Sleep 3000 ; give Windows time to release the file locks
+    ${EndIf}
+
     StrCmp "$_EXISTINGINSTALLATION_" "Yes" RunUninstaller ; Silently uninstall in case of previous installation
 
     RunUninstaller:
@@ -153,14 +162,14 @@ Section "!Jellyfin Server (required)" InstallJellyfinServer
     DetailPrint "Uninstall finished, $0"
 
     CarryOn: ; We should never hit this under normal circumstances. We should probably rewrite this
-        ; ${If} $_EXISTINGSERVICE_ == 'Yes'
-        ;     ExecWait '"$INSTDIR\nssm.exe" stop JellyfinServer' $0
-        ;     ${If} $0 <> 0
-        ;         MessageBox MB_OK|MB_ICONSTOP "Could not stop the Jellyfin Server service."
-        ;         Abort
-        ;     ${EndIf}
-        ;     DetailPrint "Stopped Jellyfin Server service, $0"
-        ; ${EndIf}
+        ${If} $_EXISTINGSERVICE_ == "Yes"
+            CarryOnStopRetry:
+            ExecWait '"$INSTDIR\nssm.exe" stop JellyfinServer' $0
+            ${If} $0 <> 0
+                !insertmacro ShowError "Could not stop the Jellyfin Server service." CarryOnStopRetry
+            ${EndIf}
+            DetailPrint "Stopped Jellyfin Server service, $0"
+        ${EndIf}
 
     SetOutPath "$INSTDIR"
 
@@ -264,7 +273,12 @@ ${EndIf}
 SectionEnd
 
 Section "-start service" StartService
-${If} $_SERVICESTART_ == "Yes"
+${If} $_CUSTOMADOPTED_ == "Yes"
+    ; The server was running from a custom location before the upgrade; bring
+    ; it back up the same way it was started, not as a new Windows service.
+    DetailPrint "Restarting the upgraded server with its original command line"
+    Exec `$_CUSTOMCMD_`
+${ElseIf} $_SERVICESTART_ == "Yes"
 ${AndIf} $_INSTALLSERVICE_ == "Yes"
     StartRetry:
     ExecWait '"$INSTDIR\nssm.exe" start JellyfinServer' $0
@@ -448,6 +462,38 @@ Function .onInit
     ProceedWithUpgrade:
 
     NoExisitingInstall: ; by this time, the variables have been correctly set to reflect previous install details
+
+    ; There is no registry record, but a server may still be running from a
+    ; custom location (portable install, moved folder, scheduled task with a
+    ; custom --datadir). Adopt it instead of quietly installing a second
+    ; server beside it, which users experience as "my library disappeared".
+    Call DetectRunningCustomServer
+    ${If} $_CUSTOMINST_ != ""
+        DetailPrint "Unregistered Jellyfin Server detected running at: $_CUSTOMINST_"
+        ${IfNot} ${Silent}
+            MessageBox MB_OKCANCEL|MB_ICONINFORMATION "A running installation of Jellyfin Server was detected at $\r$\n$_CUSTOMINST_$\r$\nwhich was not registered with this installer.$\r$\n$\r$\n\
+            Click OK to upgrade that installation in place (its data folder is kept and it will be restarted the way it was running before).\
+            $\r$\nClick Cancel to leave it alone and install a separate new copy." /SD IDOK IDOK AdoptCustomInstall
+            Goto SkipCustomInstall
+            AdoptCustomInstall:
+        ${EndIf}
+        StrCpy $INSTDIR $_CUSTOMINST_
+        StrCpy $_EXISTINGINSTALLATION_ "Yes"
+        StrCpy $_CUSTOMADOPTED_ "Yes"
+        SectionSetText ${InstallJellyfinServer} "Upgrade Jellyfin Server (required)"
+        ${If} $_CUSTOMDATADIR_ != ""
+            StrCpy $_JELLYFINDATADIR_ $_CUSTOMDATADIR_
+        ${EndIf}
+        ; Keep the user's own way of starting the server (scheduled task, tray,
+        ; console) instead of creating a second Windows service that would
+        ; fight it over the data folder and the network port.
+        StrCpy $_SERVICEACCOUNTTYPE_ "None"
+        StrCpy $_SETUPTYPE_ "Basic"
+        StrCpy $_INSTALLSERVICE_ "No"
+        StrCpy $_SERVICESTART_ "No"
+        StrCpy $_EXISTINGSERVICE_ "No"
+        SkipCustomInstall:
+    ${EndIf}
 FunctionEnd
 
 Function HideFolderWarningPage
