@@ -13,6 +13,7 @@ ManifestDPIAware true
 !include "MUI2.nsh"
 !include "Sections.nsh"
 !include "LogicLib.nsh"
+!include "FileFunc.nsh"
 !addplugindir "plugins"
 !include "helpers\nsProcess.nsh"
 !include "helpers\ShowError.nsh"
@@ -28,6 +29,7 @@ ManifestDPIAware true
     Var _EXISTINGSERVICE_
     Var _MAKESHORTCUTS_
     Var _FOLDEREXISTS_
+    Var _BASICPARAM_
 
 
 
@@ -378,6 +380,22 @@ Function .onInit
     SetShellVarContext current
     StrCpy $_JELLYFINDATADIR_ "$%ProgramData%\Jellyfin\Server"
 
+    ; Check for the /basic command line option, to force a basic installation
+    ; (no service, desktop/Start Menu shortcuts). Useful for silent installs,
+    ; which would otherwise default to service mode.
+    ${GetOptions} $CMDLINE "/basic" $R0
+    ${IfNot} ${Errors}
+        StrCpy $_BASICPARAM_ "Yes"
+        StrCpy $_SETUPTYPE_ "Basic"
+        StrCpy $_INSTALLSERVICE_ "No"
+        StrCpy $_SERVICESTART_ "No"
+        StrCpy $_SERVICEACCOUNTTYPE_ "None"
+        StrCpy $_MAKESHORTCUTS_ "Yes"
+        ${If} ${FileExists} "$LOCALAPPDATA\Jellyfin"
+            StrCpy $_JELLYFINDATADIR_ "$LOCALAPPDATA\Jellyfin\"
+        ${EndIf}
+    ${EndIf}
+
     ; This blocks another installer from running at the same time
     System::Call 'kernel32::CreateMutex(p 0, i 0, t "JellyfinServerMutex") p .r1 ?e'
     Pop $R0
@@ -483,6 +501,7 @@ FunctionEnd
 
 Function HideSetupTypePage
     ${If} $_EXISTINGINSTALLATION_ == "Yes" ; Existing installation detected, so don't ask for SetupType
+    ${OrIf} $_BASICPARAM_ == "Yes" ; Basic install requested on the command line, don't ask for SetupType
         Abort
     ${EndIf}
 FunctionEnd
