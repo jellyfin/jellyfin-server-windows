@@ -111,5 +111,16 @@ If you choose to build Jellyfin server on your own, you will also require:
 
 8. Wait for the installer to build. When complete, it will be located next to the NSIS script file. It is now ready to be used.
 
+# Silent Installation
+The installer supports unattended installation with the standard NSIS `/S` switch. Without any further options, a silent install defaults to service mode, just like the Advanced setup in the GUI.
+
+To force a basic installation (no service, with Start Menu and desktop shortcuts), add the `/basic` switch:
+
+```
+jellyfin_10.10.7_windows-x64.exe /S /basic
+```
+
+This is useful with package managers such as `winget`, which only pass `/S`, and for other automation scenarios where a Windows service is not desired.
+
 # Troubleshooting
 If you have any questions or encounter any problems, please [open an issue](https://github.com/jellyfin/jellyfin-server-windows/issues/new) in this repository, or reach out to [@anthonylavado](https://github.com/anthonylavado) on [Matrix/Discord/IRC](https://jellyfin.org/contact/).
